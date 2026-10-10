@@ -114,6 +114,14 @@ textarea{min-height:64px;resize:vertical}
 .cell.on.today{box-shadow:0 0 0 2px var(--accent)}
 .cell:active{transform:scale(.94)}
 .cell:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.en{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.en dl{margin:0;display:flex;flex-direction:column;gap:8px}
+.en dt{font-size:.74rem;color:var(--muted);font-family:var(--mono);letter-spacing:.06em}
+.en dd{margin:0;font-size:.95rem;line-height:1.55}
+.learn .en-line{font-size:.85rem;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.setrow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .linkbtn{background:none;border:0;padding:4px 0;font-size:.78rem;color:var(--muted);flex:none}
 .streak{font-family:var(--mono);font-size:.78rem;color:var(--accent);min-width:3.2em;text-align:right}
 
@@ -179,13 +187,17 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
   </div>
 </nav>
 <div class="toast" id="toast" role="status"></div>
+<label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script>
 const KEY = 'yoru-note-v1';
 const pad = n => String(n).padStart(2,'0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
-const TODAY = ymd(new Date());
+let RESET = 2; // 1日の切り替え時刻（時）
+function base(){ const d = new Date(Date.now() - RESET*3600e3); d.setHours(12,0,0,0); return d; }
+let TODAY = ymd(base());
+function refreshDay(){ const t = ymd(base()); if (t !== TODAY){ TODAY = t; return true; } return false; }
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const WD = ['日','月','火','水','木','金','土'];
 const MOODS = ['ぐったり','いまいち','ふつう','まずまず','いい日'];
@@ -218,7 +230,7 @@ function seed(){
   const days = {}, learns = [];
   for (let i = 45; i >= 1; i--){
     if (rnd() < 0.24) continue;
-    const date = ymd(addDays(new Date(), -i));
+    const date = ymd(addDays(base(), -i));
     const d = { med:[3,5,5,10,0][Math.floor(rnd()*5)], mood: 2+Math.floor(rnd()*3.6), good:'', next:'', habits:[] };
     if (rnd() < 0.85){ d.good = goods[Math.floor(rnd()*goods.length)]; d.next = nexts[Math.floor(rnd()*nexts.length)]; d.journal = true; }
     habits.forEach(h => { if (rnd() < 0.62) d.habits.push(h.id); });
@@ -231,13 +243,15 @@ function seed(){
 }
 function load(){ try { const s = localStorage.getItem(KEY); if (s) return JSON.parse(s); } catch(e){} return seed(); }
 let S = load();
+S.settings = Object.assign({ resetHour:2, iosTimer:false }, S.settings);
+RESET = S.settings.resetHour; TODAY = ymd(base());
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 const day = date => S.days[date] || (S.days[date] = { med:0, mood:0, good:'', next:'', habits:[] });
 const peek = date => S.days[date];
 const active = d => d && (d.med > 0 || d.journal || (d.habits && d.habits.length));
 
 function streakOf(test){
-  let n = 0, cur = new Date();
+  let n = 0, cur = base();
   if (!test(peek(ymd(cur)))) cur = addDays(cur,-1);
   while (test(peek(ymd(cur)))){ n++; cur = addDays(cur,-1); }
   return n;
@@ -248,17 +262,24 @@ const view = document.getElementById('view');
 let toastT;
 function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('show'), 1800); }
 function header(){
-  const now = new Date();
+  const now = base();
   document.getElementById('today-label').textContent = `${now.getMonth()+1}月${now.getDate()}日 (${WD[now.getDay()]})`;
-  const h = now.getHours();
+  const h = new Date().getHours();
   document.getElementById('greet').textContent = h >= 18 || h < 4 ? '今日もおつかれさまでした' : h < 11 ? 'おはようございます' : '今夜の準備をしておきましょう';
   document.getElementById('sample-banner').hidden = !S.sample;
 }
 
 /* ---------- tonight ---------- */
-let timer = { total:300, left:300, running:false, iv:null, phaseT:null };
+const TKEY = KEY + '-timer';
+let timer = { total:300, left:300, running:false, endAt:0, startDay:'', iv:null, phaseT:null };
 const PHASES = [['吸って',4,1.75],['止めて',2,1.75],['吐いて',6,1]];
 let wake = null;
+function saveTimer(){
+  try {
+    if (timer.running) localStorage.setItem(TKEY, JSON.stringify({ total:timer.total, endAt:timer.endAt, startDay:timer.startDay }));
+    else localStorage.removeItem(TKEY);
+  } catch(e){}
+}
 
 function viewTonight(){
   const d = peek(TODAY) || {};
@@ -277,6 +298,7 @@ function viewTonight(){
         <button class="btn primary" id="tstart">${timer.running?'一時停止':'開始'}</button>
         <button class="btn ghost" id="treset">リセット</button>
       </div>
+      <p class="muted small" style="text-align:center">画面を消しても、ほかのアプリに移っても時間は進みます。終了の音と振動は画面がついているときに鳴ります。</p>
     </section>
 
     <section class="panel" aria-labelledby="s2">
@@ -289,7 +311,12 @@ function viewTonight(){
       <label class="f">良かったこと<textarea id="j-good" placeholder="小さなことでOK。例：会議を早く終えられた">${esc(d.good)}</textarea></label>
       <label class="f">今日の学び<textarea id="j-learn" placeholder="仕事でも生活でも。学びタブに積み上がります">${esc((S.learns.find(l=>l.id===d.learnId)||{}).text)}</textarea></label>
       <label class="f">明日の一歩<input type="text" id="j-next" placeholder="例：朝イチで見積を送る" value="${esc(d.next)}"></label>
-      <button class="btn primary" id="jsave">ふりかえりを保存</button>
+      <div class="row">
+        <button class="btn primary" id="jsave" style="flex:1">ふりかえりを保存</button>
+        <button class="btn" id="jtrans">英語にする</button>
+      </div>
+      <div id="en-box">${enBlock(d)}</div>
+      ${doneJ?`<button class="linkbtn" id="jmove" style="align-self:flex-start">${pendingMove?'もう一度押すと、昨日の分に移して空欄にします':'これは昨日の記入？ → 昨日の分に移して新しく書く'}</button>`:''}
     </section>
 
     <section class="panel" aria-labelledby="s3">
@@ -306,12 +333,17 @@ function viewTonight(){
   view.querySelectorAll('[data-min]').forEach(b => b.onclick = () => { if (timer.running) return; timer.total = timer.left = +b.dataset.min*60; viewTonight(); });
   document.getElementById('tstart').onclick = toggleTimer;
   document.getElementById('treset').onclick = () => { stopTimer(); timer.left = timer.total; viewTonight(); };
+  if (timer.running) tick();
   view.querySelectorAll('[data-mood]').forEach(b => b.onclick = () => {
     view.querySelectorAll('[data-mood]').forEach(x => x.setAttribute('aria-pressed', x===b));
     view.dataset.mood = b.dataset.mood;
   });
   view.dataset.mood = d.mood || '';
   document.getElementById('jsave').onclick = saveJournal;
+  document.getElementById('jtrans').onclick = translateJournal;
+  const mv = document.getElementById('jmove');
+  if (mv) mv.onclick = () => { if (pendingMove){ pendingMove = false; moveToYesterday(); } else { pendingMove = true; viewTonight(); } };
+  bindEnCopy();
   view.querySelectorAll('[data-habit]').forEach(b => b.onclick = () => { toggleHabit(TODAY, b.dataset.habit); viewTonight(); });
   if (timer.running) runPhase(0);
 }
@@ -331,18 +363,46 @@ function chime(){
     });
   }catch(e){}
 }
+function haptic(){
+  // Android などは Vibration API、iPhone（iOS 18 以降）はスイッチ部品の触覚フィードバックを使う
+  try { if (navigator.vibrate && navigator.vibrate([300,150,300,150,600])) return; } catch(e){}
+  const l = document.getElementById('hap'); if (!l) return;
+  [0,250,500,900,1150,1400].forEach(t => setTimeout(() => { try { l.click(); } catch(e){} }, t));
+}
+async function keepAwake(){
+  try { if (!wake && navigator.wakeLock) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } } catch(e){ wake = null; }
+}
+function tick(){
+  if (!timer.running) return;
+  timer.left = Math.max(0, Math.ceil((timer.endAt - Date.now())/1000));
+  const c = document.getElementById('clock'); if (c) c.textContent = fmt(timer.left);
+  if (timer.left <= 0) finishTimer();
+}
+function startTicking(){
+  clearInterval(timer.iv);
+  timer.iv = setInterval(tick, 500);
+  tick();
+}
+function iosTimerUrl(sec){
+  return 'shortcuts://run-shortcut?name=' + encodeURIComponent('夜のノート瞑想') + '&input=text&text=' + Math.ceil(sec/60);
+}
 async function toggleTimer(){
-  if (timer.running){ stopTimer(); viewTonight(); return; }
+  if (timer.running){
+    timer.running = false; clearInterval(timer.iv); clearTimeout(timer.phaseT);
+    try { wake && wake.release(); } catch(e){} wake = null;
+    saveTimer(); viewTonight(); return;
+  }
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
   try { actx = actx || new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); } catch(e){}
-  try { wake = await navigator.wakeLock?.request('screen'); } catch(e){ wake = null; }
+  keepAwake();
   timer.running = true;
-  timer.iv = setInterval(() => {
-    timer.left--;
-    const c = document.getElementById('clock'); if (c) c.textContent = fmt(timer.left);
-    if (timer.left <= 0) finishTimer();
-  }, 1000);
+  timer.endAt = Date.now() + timer.left*1000;
+  timer.startDay = TODAY;
+  saveTimer();
+  startTicking();
   document.getElementById('tstart').textContent = '一時停止';
   runPhase(0);
+  if (S.settings.iosTimer) location.href = iosTimerUrl(timer.left);
 }
 function runPhase(i){
   clearTimeout(timer.phaseT);
@@ -357,16 +417,90 @@ function runPhase(i){
 function stopTimer(){
   timer.running = false; clearInterval(timer.iv); clearTimeout(timer.phaseT);
   try { wake && wake.release(); } catch(e){} wake = null;
+  saveTimer();
 }
-function finishTimer(){
-  const mins = Math.round(timer.total/60);
-  stopTimer(); chime();
-  day(TODAY).med = (day(TODAY).med || 0) + mins; save();
+function finishTimer(late){
+  const mins = Math.round(timer.total/60), dayKey = timer.startDay || TODAY;
+  stopTimer();
+  if (!late){ chime(); haptic(); }
+  day(dayKey).med = (day(dayKey).med || 0) + mins; save();
   timer.left = timer.total;
-  toast(`${mins}分の瞑想を記録しました`);
+  toast(late ? `離れている間に${mins}分の瞑想が終わりました` : `${mins}分の瞑想を記録しました`);
   if (current === 'tonight') viewTonight();
 }
-function saveJournal(){
+function restoreTimer(){
+  try {
+    const t = JSON.parse(localStorage.getItem(TKEY) || 'null');
+    if (!t || !t.endAt) return;
+    timer.total = t.total; timer.endAt = t.endAt; timer.startDay = t.startDay; timer.running = true;
+    if (Date.now() >= t.endAt) finishTimer(true);
+    else { startTicking(); keepAwake(); if (current === 'tonight') viewTonight(); }
+  } catch(e){}
+}
+/* ---------- English ---------- */
+const EN_LABEL = { good:'GOOD THING', learn:'LEARNING', next:'NEXT STEP' };
+function enBlock(d){
+  if (!d || !d.en) return '';
+  const keys = ['good','learn','next'].filter(k => d.en[k]);
+  if (!keys.length) return '';
+  return `<div class="en"><dl>${keys.map(k=>`<div><dt>${EN_LABEL[k]}</dt><dd>${esc(d.en[k])}</dd></div>`).join('')}</dl>
+    <div class="row"><button class="btn ghost small" id="en-copy">英文をコピー</button></div></div>`;
+}
+function bindEnCopy(){
+  const b = document.getElementById('en-copy'); if (!b) return;
+  b.onclick = async () => {
+    const d = peek(TODAY); if (!d || !d.en) return;
+    const txt = ['good','learn','next'].filter(k => d.en[k]).map(k => d.en[k]).join('\n');
+    try { await navigator.clipboard.writeText(txt); toast('英文をコピーしました'); } catch(e){ toast('長押しで選択してコピーしてください'); }
+  };
+}
+async function toEnglish(text){
+  const r = await fetch('https://api.mymemory.translated.net/get?langpair=ja|en&q=' + encodeURIComponent(text));
+  if (!r.ok) throw new Error('http');
+  const j = await r.json();
+  const t = j && j.responseData && j.responseData.translatedText;
+  if (!t || j.responseStatus != 200) throw new Error('bad');
+  return t;
+}
+async function translateJournal(){
+  const vals = {
+    good: document.getElementById('j-good').value.trim(),
+    learn: document.getElementById('j-learn').value.trim(),
+    next: document.getElementById('j-next').value.trim()
+  };
+  const keys = Object.keys(vals).filter(k => vals[k]);
+  if (!keys.length){ toast('先にふりかえりを書いてください'); return; }
+  const btn = document.getElementById('jtrans'); btn.disabled = true; btn.textContent = '変換中…';
+  try {
+    const out = {};
+    for (const k of keys) out[k] = await toEnglish(vals[k]);
+    saveJournal(true);
+    const d = day(TODAY); d.en = out;
+    const l = S.learns.find(x => x.id === d.learnId); if (l) l.en = out.learn || '';
+    save(); viewTonight(); toast('英語にしました');
+  } catch(e){
+    btn.disabled = false; btn.textContent = '英語にする';
+    const all = keys.map(k => vals[k]).join('\n');
+    document.getElementById('en-box').innerHTML = `<div class="en"><p class="small">いまは変換できませんでした。電波のある場所でもう一度押すか、Google翻訳で開いてください。</p>
+      <a class="btn" style="text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://translate.google.com/?sl=ja&tl=en&op=translate&text=${encodeURIComponent(all)}">Google翻訳で開く</a></div>`;
+  }
+}
+let pendingMove = false;
+function moveToYesterday(){
+  const y = ymd(addDays(base(), -1));
+  const d = day(TODAY), p = day(y);
+  const join = (a,b) => [a,b].filter(Boolean).join('\n');
+  if (p.journal){
+    p.good = join(p.good, d.good); p.next = join(p.next, d.next); p.mood = p.mood || d.mood;
+    if (d.learnId){ const l = S.learns.find(x => x.id === d.learnId); if (l) l.date = y; }
+  } else {
+    Object.assign(p, { mood:d.mood, good:d.good, next:d.next, en:d.en, journal:true, savedAt:d.savedAt });
+    if (d.learnId){ p.learnId = d.learnId; const l = S.learns.find(x => x.id === d.learnId); if (l) l.date = y; }
+  }
+  Object.assign(d, { mood:0, good:'', next:'', journal:false }); delete d.en; delete d.learnId; delete d.savedAt;
+  save(); toast('昨日の分に移しました。今日の分を書けます'); viewTonight();
+}
+function saveJournal(silent){
   const d = day(TODAY);
   d.mood = +view.dataset.mood || 0;
   d.good = document.getElementById('j-good').value.trim();
@@ -377,7 +511,10 @@ function saveJournal(){
     if (l) l.text = lt; else { l = {id:'l'+Date.now(), date:TODAY, text:lt}; S.learns.push(l); d.learnId = l.id; }
   } else if (d.learnId){ S.learns = S.learns.filter(x => x.id !== d.learnId); delete d.learnId; }
   d.journal = !!(d.mood || d.good || d.next || lt);
-  save(); toast('ふりかえりを保存しました'); viewTonight();
+  d.savedAt = Date.now();
+  save();
+  if (silent === true) return;
+  toast('ふりかえりを保存しました'); viewTonight();
 }
 
 /* ---------- habits ---------- */
@@ -389,7 +526,7 @@ function toggleHabit(date, id){
 function habitStreak(id){ return streakOf(d => d && d.habits && d.habits.includes(id)); }
 let pendingDelete = null;
 function viewHabits(){
-  const last7 = [...Array(7)].map((_,i) => ymd(addDays(new Date(), i-6)));
+  const last7 = [...Array(7)].map((_,i) => ymd(addDays(base(), i-6)));
   view.innerHTML = `
   <div style="display:flex;flex-direction:column;gap:16px">
     <div><h2>習慣</h2><p class="muted small">直近7日。日付のマスをタップすると、つけ忘れた日も直せます。</p></div>
@@ -427,9 +564,9 @@ function viewHabits(){
 let q = '';
 function recallPick(){
   if (!S.learns.length) return null;
-  for (const back of [7,30,14,3]){ const dt = ymd(addDays(new Date(),-back)); const l = S.learns.find(x => x.date === dt); if (l) return {l, label:`${back}日前のあなたの学び`}; }
+  for (const back of [7,30,14,3]){ const dt = ymd(addDays(base(),-back)); const l = S.learns.find(x => x.date === dt); if (l) return {l, label:`${back}日前のあなたの学び`}; }
   const past = S.learns.filter(x => x.date !== TODAY); if (!past.length) return null;
-  const l = past[new Date().getDate() % past.length];
+  const l = past[base().getDate() % past.length];
   return {l, label:'以前のあなたの学び'};
 }
 function viewLearn(){
@@ -445,7 +582,7 @@ function viewLearn(){
     </form>
     <input type="search" id="ql" placeholder="学びを検索" value="${esc(q)}">
     <section class="panel" style="gap:0">${list.map(l=>`
-      <div class="learn"><span class="d">${l.date.replace(/-/g,'.')}</span><span>${esc(l.text)}</span></div>`).join('') || '<p class="muted small">まだ学びがありません。今夜のふりかえりで1つ書いてみましょう。</p>'}</section>
+      <div class="learn"><span class="d">${l.date.replace(/-/g,'.')}</span><span>${esc(l.text)}</span>${l.en?`<span class="en-line">${esc(l.en)}</span>`:''}</div>`).join('') || '<p class="muted small">まだ学びがありません。今夜のふりかえりで1つ書いてみましょう。</p>'}</section>
   </div>`;
   document.getElementById('ql').oninput = e => { q = e.target.value; const pos = e.target.selectionStart; viewLearn(); const n = document.getElementById('ql'); n.focus(); n.setSelectionRange(pos,pos); };
   document.getElementById('addl').onsubmit = e => {
@@ -467,7 +604,7 @@ function viewLife(){
   const streak = streakOf(active);
   const medMin = ds.reduce((a,d) => a + (d.med||0), 0);
   // heatmap: 12 weeks, columns = weeks starting Monday
-  const now = new Date(); const dow = (now.getDay()+6)%7;
+  const now = base(); const dow = (now.getDay()+6)%7;
   const start = addDays(now, -dow - 7*11);
   let cells = '';
   for (let i = 0; i < 84; i++){
@@ -507,6 +644,19 @@ function viewLife(){
       </svg>` : '<p class="muted small">ふりかえりで調子を記録すると、ここに波が描かれます。</p>'}
     </section>
     <section class="panel">
+      <h3>設定</h3>
+      <div class="setrow">
+        <label for="reset-hour">1日の切り替え時刻</label>
+        <select id="reset-hour">${[0,1,2,3,4,5,6].map(h=>`<option value="${h}" ${RESET===h?'selected':''}>${h}:00</option>`).join('')}</select>
+      </div>
+      <p class="small muted">この時刻をすぎて開くと、新しい日の記入欄になります。たとえば2:00なら、深夜1時の記入は前日の分として残ります。</p>
+      <div class="setrow">
+        <label for="ios-timer">iPhoneのタイマーと連動</label>
+        <input type="checkbox" id="ios-timer" switch ${S.settings.iosTimer?'checked':''}>
+      </div>
+      <p class="small muted">オンにすると、瞑想の開始時にショートカット「夜のノート瞑想」を呼び出します。iPhone標準のタイマーで鳴らすので、画面がロックされていても終了時に音と振動で知らせます。</p>
+    </section>
+    <section class="panel">
       <h3>データ</h3>
       <p class="small muted">記録はこの端末のブラウザだけに保存されます。機種変更の前にコピーして保管してください。</p>
       <div class="row"><button class="btn" id="copy">記録をコピー</button><button class="btn" id="imp">記録を読み込む</button><button class="btn ghost" id="theme">表示：${themeLabel()}</button></div>
@@ -527,9 +677,13 @@ function viewLife(){
     try {
       const d = JSON.parse(document.getElementById('imptext').value);
       if (!d || !Array.isArray(d.habits) || typeof d.days !== 'object' || !Array.isArray(d.learns)) throw 0;
-      S = d; save(); header(); toast('記録を読み込みました'); viewLife();
+      S = d; S.settings = Object.assign({ resetHour:2, iosTimer:false }, S.settings); RESET = S.settings.resetHour; refreshDay(); save(); header(); toast('記録を読み込みました'); viewLife();
     } catch(e){ toast('読み込めませんでした。「記録をコピー」した文字をそのまま貼ってください'); }
   };
+  document.getElementById('reset-hour').onchange = e => {
+    S.settings.resetHour = RESET = +e.target.value; save(); refreshDay(); header(); toast(`切り替え時刻を${RESET}:00にしました`);
+  };
+  document.getElementById('ios-timer').onchange = e => { S.settings.iosTimer = e.target.checked; save(); };
   document.getElementById('theme').onclick = () => {
     const cur = document.documentElement.dataset.theme;
     const next = cur === 'dark' ? 'light' : cur === 'light' ? '' : 'dark';
@@ -544,18 +698,28 @@ function themeLabel(){ const t = document.documentElement.dataset.theme; return 
 let current = 'tonight';
 const VIEWS = { tonight:viewTonight, habits:viewHabits, learn:viewLearn, life:viewLife };
 function go(tab){
-  current = tab; pendingDelete = null;
+  current = tab; pendingDelete = null; pendingMove = false;
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-current', t.dataset.tab===tab ? 'page' : 'false'));
   VIEWS[tab](); window.scrollTo(0,0);
 }
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => go(t.dataset.tab));
 document.getElementById('clear-sample').onclick = () => {
-  S = { habits:S.habits, days:{}, learns:[], sample:false }; save(); header(); go(current); toast('サンプルを消しました');
+  S = { habits:S.habits, days:{}, learns:[], sample:false, settings:S.settings }; save(); header(); go(current); toast('サンプルを消しました');
 };
 try { const t = localStorage.getItem(KEY+'-theme'); if (t) document.documentElement.dataset.theme = t; } catch(e){}
 header();
 const hash = location.hash.slice(1);
 go(VIEWS[hash] ? hash : 'tonight');
+restoreTimer();
+function onReturn(){
+  if (document.visibilityState !== 'visible') return;
+  if (refreshDay()){ header(); go(current); toast('新しい日になりました'); }
+  if (timer.running){ tick(); keepAwake(); }
+}
+document.addEventListener('visibilitychange', onReturn);
+window.addEventListener('pageshow', onReturn);
+window.addEventListener('focus', onReturn);
+setInterval(() => { const a = document.activeElement; if (a && /TEXTAREA|INPUT/.test(a.tagName)) return; if (refreshDay()){ header(); go(current); } }, 60000);
 window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (VIEWS[h]) go(h); });
 </script>
 
