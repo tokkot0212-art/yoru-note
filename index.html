@@ -2,177 +2,727 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ベガ応援帳</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>夜のノート</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0f1524">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ベガ応援帳">
-<meta name="theme-color" content="#111111">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" href="icon-192.png">
-<link rel="manifest" href="manifest.json">
-<style>
-:root{
-  --bg:#f6f4ee; --card:#ffffff; --ink:#1a1a1a; --sub:#6b665c; --line:#e4dfd3;
-  --gold:#c9a227; --gold-ink:#7a5f00; --navy:#1b2a4a; --done:#2f7d4f;
-}
-@media (prefers-color-scheme: dark){
-  :root{ --bg:#0f0f10; --card:#1a1a1c; --ink:#f2efe8; --sub:#a39d90; --line:#2c2b29;
-    --gold:#e2bb3e; --gold-ink:#e2bb3e; --navy:#9fb4e0; --done:#5fc28a; }
-}
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;
-  -webkit-text-size-adjust:100%}
-header{position:sticky;top:0;z-index:5;background:#111;color:#fff;
-  padding:calc(env(safe-area-inset-top) + 10px) 16px 0}
-header h1{margin:0;font-size:20px;letter-spacing:.04em}
-header h1 span{color:var(--gold)}
-.sub{font-size:12px;color:#bbb;margin-top:2px}
-nav{display:flex;gap:4px;margin-top:10px;overflow-x:auto}
-nav button{flex:1;border:0;background:transparent;color:#aaa;font-size:15px;font-weight:600;
-  padding:10px 4px;border-bottom:3px solid transparent}
-nav button.on{color:#fff;border-bottom-color:var(--gold)}
-main{padding:12px 16px calc(env(safe-area-inset-bottom) + 24px);max-width:720px;margin:0 auto}
-.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.tools input{flex:1 1 160px;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 12px;font-size:14px}
-.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.progress{font-size:13px;color:var(--sub);margin:4px 0 10px}
-.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:4px}
-.bar i{display:block;height:100%;background:var(--gold);width:0}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
-.num{flex:0 0 48px;height:48px;border-radius:12px;background:#111;color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px}
-.body{flex:1;min-width:0}
-.name{font-size:17px;font-weight:700}
-.pos{font-size:11px;color:var(--sub);margin-left:6px;font-weight:600}
-.orig{font-size:12.5px;color:var(--sub);margin-top:2px}
-.btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.btns a{text-decoration:none;font-size:13px;font-weight:600;padding:7px 10px;border-radius:9px;border:1px solid var(--line);color:var(--ink);background:transparent}
-.btns a.main{background:var(--gold);border-color:var(--gold);color:#111}
-.chk{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;font-size:10px;color:var(--sub);gap:2px}
-.chk input{width:24px;height:24px;accent-color:var(--done)}
-.card.done{border-color:var(--done)}
-.nochant{font-size:12px;color:var(--sub);margin-top:2px}
-h2{font-size:14px;color:var(--gold-ink);letter-spacing:.06em;margin:18px 0 8px}
-.links a{display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:var(--ink);
-  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:6px;font-size:15px}
-.links a::after{content:"›";color:var(--sub);font-size:20px}
-.hide{display:none}
-footer{font-size:11px;color:var(--sub);margin-top:20px;line-height:1.6}
-</style>
+<meta name="apple-mobile-web-app-title" content="夜のノート">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
 </head>
 <body>
-<header>
-  <h1>ベガ<span>応援帳</span></h1>
-  <div class="sub">2026/27 ベガルタ仙台 チャント練習 & リンク集</div>
-  <nav>
-    <button data-tab="players" class="on">選手</button>
-    <button data-tab="team">チーム</button>
-    <button data-tab="links">リンク</button>
-  </nav>
-</header>
-<main>
-  <section id="players">
-    <div class="tools">
-      <input id="q" type="search" placeholder="名前・背番号で検索">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one-column phone app, night-desk feel — ink-blue ground, a single lamp-amber accent, bottom tab bar */
+:root{
+  --bg:#0f1524; --surface:#172036; --surface2:#1f2a44; --line:#2a3654;
+  --fg:#e7e9f0; --muted:#8f9bb8; --accent:#e8b86a; --accent-ink:#1a1408;
+  --moon:#a8bbeb; --good:#7cc4a4; --heat0:#1c2640;
+  --display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#eef1f6; --surface:#ffffff; --surface2:#e4e9f2; --line:#d3dae6;
+  --fg:#1a2236; --muted:#5d6a85; --accent:#a86d14; --accent-ink:#ffffff;
+  --moon:#4a63a8; --good:#2f8a63; --heat0:#e1e6ef; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#eef1f6; --surface:#ffffff; --surface2:#e4e9f2; --line:#d3dae6;
+  --fg:#1a2236; --muted:#5d6a85; --accent:#a86d14; --accent-ink:#ffffff;
+  --moon:#4a63a8; --good:#2f8a63; --heat0:#e1e6ef; color-scheme:light}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--body);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.app{max-width:480px;margin:0 auto;padding-inline:16px;padding-block:20px 110px;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;line-height:1.35}
+h1{font-size:1.65rem;letter-spacing:.02em}
+h2{font-size:1.2rem}
+h3{font-size:1rem}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:.72rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;font-family:var(--mono)}
+
+header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.moon{width:38px;height:38px;border-radius:50%;flex:none;
+  background:radial-gradient(circle at 65% 35%,transparent 44%,var(--moon) 45%);opacity:.9}
+
+.banner{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  background:var(--surface2);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:.82rem;color:var(--muted)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.step{display:flex;align-items:baseline;gap:10px}
+.step .n{font-family:var(--mono);font-size:.78rem;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:0 8px;flex:none}
+.done-tag{margin-left:auto;font-size:.75rem;color:var(--good);flex:none}
+
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:10px;padding:9px 14px;font-weight:500}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.btn.ghost{background:transparent}
+.btn:focus-visible,.chip:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visible,.dot:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 12px;font-size:.85rem}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+
+/* breathing */
+.breath{display:grid;place-items:center;height:220px;position:relative}
+.ring{position:absolute;width:190px;height:190px;border-radius:50%;border:1px solid var(--line)}
+.orb{width:86px;height:86px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,color-mix(in srgb,var(--accent) 85%,white),color-mix(in srgb,var(--accent) 35%,transparent) 70%);
+  transform:scale(1);transition-property:transform;transition-timing-function:ease-in-out}
+.breath-label{position:absolute;bottom:6px;font-size:.9rem;color:var(--muted)}
+.clock{font-family:var(--mono);font-size:2.4rem;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.04em}
+
+label.f{display:flex;flex-direction:column;gap:6px;font-size:.88rem;font-weight:500}
+textarea,input[type=text],input[type=search]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+textarea{min-height:64px;resize:vertical}
+.mood{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.mood .chip{padding:6px 2px;font-size:.75rem;text-align:center;border-radius:10px}
+
+.habit{display:flex;align-items:center;gap:12px;padding-block:10px;border-top:1px solid var(--line)}
+.habit:first-child{border-top:0}
+.check{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--muted);background:transparent;display:grid;place-items:center;flex:none;padding:0}
+.check[aria-pressed="true"]{background:var(--good);border-color:var(--good)}
+.check[aria-pressed="true"]::after{content:"";width:10px;height:6px;border-left:2px solid var(--bg);border-bottom:2px solid var(--bg);transform:rotate(-45deg) translate(1px,-1px)}
+.habit .name{flex:1;min-width:0}
+.dots{display:flex;gap:4px}
+.dot{width:12px;height:12px;border-radius:3px;background:var(--heat0);border:0;padding:0}
+.dot.on{background:var(--good)}
+.hblock{display:flex;flex-direction:column;gap:10px;padding-block:14px;border-top:1px solid var(--line)}
+.hblock:first-child{border-top:0;padding-top:0}
+.hhead{display:flex;align-items:baseline;gap:10px}
+.hhead .name{flex:1;min-width:0;font-weight:500}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cell{min-height:52px;border-radius:12px;border:1.5px solid var(--line);background:var(--heat0);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:4px 0;
+  font-family:var(--mono);line-height:1.2;color:var(--muted);touch-action:manipulation;transition:transform .1s}
+.cell .w{font-size:.66rem}
+.cell .n{font-size:.95rem;font-variant-numeric:tabular-nums;color:var(--fg)}
+.cell.on{background:var(--good);border-color:var(--good);color:var(--bg)}
+.cell.on .n{color:var(--bg);font-weight:500}
+.cell.today{border-color:var(--accent)}
+.cell.on.today{box-shadow:0 0 0 2px var(--accent)}
+.cell:active{transform:scale(.94)}
+.cell:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.en{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.en dl{margin:0;display:flex;flex-direction:column;gap:8px}
+.en dt{font-size:.74rem;color:var(--muted);font-family:var(--mono);letter-spacing:.06em}
+.en dd{margin:0;font-size:.95rem;line-height:1.55}
+.learn .en-line{font-size:.85rem;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.setrow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.linkbtn{background:none;border:0;padding:4px 0;font-size:.78rem;color:var(--muted);flex:none}
+.streak{font-family:var(--mono);font-size:.78rem;color:var(--accent);min-width:3.2em;text-align:right}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.stat .v{font-family:var(--mono);font-size:1.7rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .v small{font-size:.8rem;color:var(--muted);margin-left:2px}
+.stat .k{font-size:.78rem;color:var(--muted)}
+
+.heat-wrap{overflow-x:auto}
+.heat{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:minmax(16px,1fr);gap:4px}
+.heat i{aspect-ratio:1;border-radius:4px;background:var(--heat0);display:block}
+.heat i.l1{background:color-mix(in srgb,var(--accent) 30%,var(--heat0))}
+.heat i.l2{background:color-mix(in srgb,var(--accent) 62%,var(--heat0))}
+.heat i.l3{background:var(--accent)}
+.heat i.fut{background:transparent}
+.heat i.today{outline:1.5px solid var(--fg);outline-offset:1px}
+.legend{display:flex;gap:4px;align-items:center;font-size:.72rem;color:var(--muted);justify-content:flex-end}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+.learn{display:flex;flex-direction:column;gap:4px;padding-block:12px;border-top:1px solid var(--line)}
+.learn:first-child{border-top:0}
+.learn .d{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+.recall{background:var(--surface2);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.recall blockquote{margin:0;font-family:var(--display);font-size:1.08rem;line-height:1.6}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+nav.tabs .inner{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tab{background:none;border:0;padding:8px 0;font-size:.78rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6}
+.tab[aria-current="page"]{color:var(--accent);font-weight:700}
+
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:.85rem;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
+svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
+@media (prefers-reduced-motion: reduce){.orb{transition:none!important}.toast{transition:none}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div>
+      <div class="eyebrow mono" id="today-label"></div>
+      <h1 id="greet">今日もおつかれさまでした</h1>
     </div>
-    <div class="chips" id="pos"></div>
-    <div class="progress"><span id="prog"></span><div class="bar"><i id="progbar"></i></div></div>
-    <div id="list"></div>
-  </section>
-  <section id="team" class="hide"><div id="teamlist"></div></section>
-  <section id="links" class="hide links"><div id="linklist"></div></section>
-  <footer>動画はファン・公式の投稿へのリンクです。動画未登録の選手の「▶ チャント」は、YouTubeを再生回数の多い順で検索します。<br>練習済みチェックはこの端末にのみ保存されます。</footer>
-</main>
-<script src="data.js"></script>
+    <div class="moon" aria-hidden="true"></div>
+  </header>
+
+  <div class="banner" id="sample-banner" hidden>
+    <span>過去45日分はサンプルの記録です。</span>
+    <button class="btn ghost small" id="clear-sample">消して自分の記録を始める</button>
+  </div>
+
+  <main id="view"></main>
+</div>
+
+<nav class="tabs" aria-label="メニュー">
+  <div class="inner">
+    <button class="tab" data-tab="tonight"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>今夜</button>
+    <button class="tab" data-tab="habits"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8 12 3 3 5-6"/></svg>習慣</button>
+    <button class="tab" data-tab="learn"><svg viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z"/></svg>学び</button>
+    <button class="tab" data-tab="life"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="4" height="4"/><rect x="10" y="4" width="4" height="4"/><rect x="16" y="4" width="4" height="4"/><rect x="4" y="10" width="4" height="4"/><rect x="10" y="10" width="4" height="4"/><rect x="4" y="16" width="4" height="4"/></svg>記録</button>
+  </div>
+</nav>
+<div class="toast" id="toast" role="status"></div>
+<label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
+
 <script>
-(function(){
-  var KEY="vega-ouen-done";
-  var done={};
-  try{ done=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(e){ done={}; }
-  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(done)); }catch(e){} }
-  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
-  function yt(q){ return "https://www.youtube.com/results?search_query="+encodeURIComponent(q); }
+const KEY = 'yoru-note-v1';
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+let RESET = 2; // 1日の切り替え時刻（時）
+function base(){ const d = new Date(Date.now() - RESET*3600e3); d.setHours(12,0,0,0); return d; }
+let TODAY = ymd(base());
+function refreshDay(){ const t = ymd(base()); if (t !== TODAY){ TODAY = t; return true; } return false; }
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const WD = ['日','月','火','水','木','金','土'];
+const MOODS = ['ぐったり','いまいち','ふつう','まずまず','いい日'];
 
-  var posSel="ALL", posList=["ALL","動画あり","GK","DF","MF","FW"];
-  var posEl=document.getElementById("pos");
-  posList.forEach(function(p){
-    var b=document.createElement("button"); b.className="chip"+(p===posSel?" on":""); b.textContent=p==="ALL"?"全員":p;
-    b.onclick=function(){ posSel=p; [].forEach.call(posEl.children,function(x){x.classList.remove("on")}); b.classList.add("on"); render(); };
-    posEl.appendChild(b);
-  });
-  document.getElementById("q").addEventListener("input",render);
-
-  function render(){
-    var q=document.getElementById("q").value.trim().replace(/\s/g,"");
-    var html="";
-    PLAYERS.forEach(function(p){
-      if(posSel==="動画あり" && !p.chant) return;
-      if(["GK","DF","MF","FW"].indexOf(posSel)>=0 && p.pos!==posSel) return;
-      if(q && (p.name.replace(/\s/g,"").indexOf(q)<0) && String(p.no)!==q) return;
-      var id="p"+p.no, isDone=!!done[id];
-      var b="";
-      var q2="ベガルタ "+p.name.replace(/\s/g,"")+" チャント";
-      if(p.chant) b+='<a class="main" href="'+esc(p.chant)+'" target="_blank" rel="noopener">▶ チャント</a>';
-      else b+='<a class="main" href="'+yt(q2)+'&sp=CAM%253D" target="_blank" rel="noopener">▶ チャント</a>';
-      b+='<a href="'+yt(q2)+'" target="_blank" rel="noopener">YouTubeで探す</a>';
-      html+='<div class="card'+(isDone?" done":"")+'">'+
-        '<div class="num">'+p.no+'</div>'+
-        '<div class="body"><div class="name">'+esc(p.name)+'<span class="pos">'+p.pos+(p.note?" · "+esc(p.note):"")+'</span></div>'+
-        (p.orig?'<div class="orig">原曲：'+esc(p.orig)+'</div>':'')+
-        (p.lyric?'<div class="orig">♪ '+esc(p.lyric)+'</div>':'')+
-        (p.chant||p.lyric?'':'<div class="nochant">再生数の多い順に表示</div>')+
-        '<div class="btns">'+b+'</div></div>'+
-        '<label class="chk"><input type="checkbox" data-id="'+id+'"'+(isDone?" checked":"")+'>練習済</label>'+
-        '</div>';
-    });
-    document.getElementById("list").innerHTML=html||'<p class="nochant">該当なし</p>';
-    var withChant=PLAYERS;
-    var n=withChant.filter(function(p){return done["p"+p.no]}).length;
-    document.getElementById("prog").textContent="チャント練習 "+n+" / "+withChant.length+" 人";
-    document.getElementById("progbar").style.width=(withChant.length?n/withChant.length*100:0)+"%";
+/* ---------- data ---------- */
+function seed(){
+  let r = 7; const rnd = () => (r = (r*16807) % 2147483647) / 2147483647;
+  const habits = [
+    {id:'h1', name:'22時以降はスマホを置く'},
+    {id:'h2', name:'読書 10ページ'},
+    {id:'h3', name:'ストレッチ 5分'},
+    {id:'h4', name:'英単語 10個'}
+  ];
+  const goods = ['企画書が一発で通った','後輩に感謝された','定時で上がれた','昼に散歩できた','難しい商談をまとめられた','家族と夕飯を食べた','会議を15分早く終えられた'];
+  const learnsText = [
+    '会議の冒頭でゴールを一行で共有すると脱線しない',
+    'ピボットテーブルで月次集計が5分になった',
+    '断るときは代案をひとつ添えると角が立たない',
+    '「circle back」は後で改めて話す、という意味',
+    '寝る前のスマホを15分減らすと寝つきが良い',
+    '1on1は相手に7割話してもらうと本音が出る',
+    '資料は結論→理由→次のアクションの順で書く',
+    'ポモドーロ25分×4で午前中に資料が完成した',
+    '数字は前年比と目標比の両方で見る',
+    '疲れた日は「完璧より完了」で切り上げる',
+    'メールの件名に期限を入れると返信が早い',
+    '怒りは6秒待つと言葉を選べる'
+  ];
+  const nexts = ['朝イチで見積を送る','10時の会議の論点を3つ書く','部長に進捗を一言報告','早めに寝る','経費精算を終わらせる'];
+  const days = {}, learns = [];
+  for (let i = 45; i >= 1; i--){
+    if (rnd() < 0.24) continue;
+    const date = ymd(addDays(base(), -i));
+    const d = { med:[3,5,5,10,0][Math.floor(rnd()*5)], mood: 2+Math.floor(rnd()*3.6), good:'', next:'', habits:[] };
+    if (rnd() < 0.85){ d.good = goods[Math.floor(rnd()*goods.length)]; d.next = nexts[Math.floor(rnd()*nexts.length)]; d.journal = true; }
+    habits.forEach(h => { if (rnd() < 0.62) d.habits.push(h.id); });
+    if (d.journal && rnd() < 0.5 && learns.length < learnsText.length){
+      const id = 'l'+i; learns.push({id, date, text: learnsText[learns.length]}); d.learnId = id;
+    }
+    days[date] = d;
   }
-  document.getElementById("list").addEventListener("change",function(e){
-    var id=e.target.getAttribute("data-id"); if(!id) return;
-    if(e.target.checked) done[id]=1; else delete done[id];
-    save(); render();
-  });
+  return { habits, days, learns, sample:true };
+}
+function load(){ try { const s = localStorage.getItem(KEY); if (s) return JSON.parse(s); } catch(e){} return seed(); }
+let S = load();
+S.settings = Object.assign({ resetHour:2, iosTimer:false }, S.settings);
+RESET = S.settings.resetHour; TODAY = ymd(base());
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+const day = date => S.days[date] || (S.days[date] = { med:0, mood:0, good:'', next:'', habits:[] });
+const peek = date => S.days[date];
+const active = d => d && (d.med > 0 || d.journal || (d.habits && d.habits.length));
 
-  var th="";
-  TEAM_CHANTS.forEach(function(c,i){
-    var id="t"+i, isDone=!!done[id];
-    th+='<div class="card'+(isDone?" done":"")+'"><div class="num" style="font-size:14px">'+(i+1)+'</div><div class="body"><div class="name">'+esc(c.name)+'</div>'+
-      (c.orig?'<div class="orig">原曲：'+esc(c.orig)+'</div>':'')+
-      '<div class="btns"><a class="main" href="'+esc(c.url)+'" target="_blank" rel="noopener">▶ 再生</a><a href="'+yt("ベガルタ "+c.name+" チャント")+'" target="_blank" rel="noopener">YouTubeで探す</a></div></div>'+
-      '<label class="chk"><input type="checkbox" data-id="'+id+'"'+(isDone?" checked":"")+'>練習済</label></div>';
-  });
-  var tl=document.getElementById("teamlist"); tl.innerHTML=th;
-  tl.addEventListener("change",function(e){
-    var id=e.target.getAttribute("data-id"); if(!id) return;
-    if(e.target.checked) done[id]=1; else delete done[id];
-    save(); e.target.closest(".card").classList.toggle("done",e.target.checked);
-  });
+function streakOf(test){
+  let n = 0, cur = base();
+  if (!test(peek(ymd(cur)))) cur = addDays(cur,-1);
+  while (test(peek(ymd(cur)))){ n++; cur = addDays(cur,-1); }
+  return n;
+}
 
-  var lh="";
-  LINKS.forEach(function(g){
-    lh+='<h2>'+esc(g.group)+'</h2>';
-    g.items.forEach(function(it){ lh+='<a href="'+esc(it.u)+'" target="_blank" rel="noopener">'+esc(it.t)+'</a>'; });
-  });
-  document.getElementById("linklist").innerHTML=lh;
+/* ---------- ui helpers ---------- */
+const view = document.getElementById('view');
+let toastT;
+function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('show'), 1800); }
+function header(){
+  const now = base();
+  document.getElementById('today-label').textContent = `${now.getMonth()+1}月${now.getDate()}日 (${WD[now.getDay()]})`;
+  const h = new Date().getHours();
+  document.getElementById('greet').textContent = h >= 18 || h < 4 ? '今日もおつかれさまでした' : h < 11 ? 'おはようございます' : '今夜の準備をしておきましょう';
+  document.getElementById('sample-banner').hidden = !S.sample;
+}
 
-  var tabs=document.querySelectorAll("nav button");
-  [].forEach.call(tabs,function(b){
-    b.onclick=function(){
-      [].forEach.call(tabs,function(x){x.classList.remove("on")}); b.classList.add("on");
-      ["players","team","links"].forEach(function(s){ document.getElementById(s).classList.toggle("hide",s!==b.dataset.tab); });
-      window.scrollTo(0,0);
-    };
+/* ---------- tonight ---------- */
+const TKEY = KEY + '-timer';
+let timer = { total:300, left:300, running:false, endAt:0, startDay:'', iv:null, phaseT:null };
+const PHASES = [['吸って',4,1.75],['止めて',2,1.75],['吐いて',6,1]];
+let wake = null;
+function saveTimer(){
+  try {
+    if (timer.running) localStorage.setItem(TKEY, JSON.stringify({ total:timer.total, endAt:timer.endAt, startDay:timer.startDay }));
+    else localStorage.removeItem(TKEY);
+  } catch(e){}
+}
+
+function viewTonight(){
+  const d = peek(TODAY) || {};
+  const doneMed = d.med > 0, doneJ = !!d.journal;
+  view.innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <section class="panel" aria-labelledby="s1">
+      <div class="step"><span class="n">1</span><h2 id="s1">呼吸を整える</h2>${doneMed?`<span class="done-tag">今日 ${d.med}分 済み</span>`:''}</div>
+      <p class="muted small">4秒吸って、2秒止めて、6秒吐く。円の動きに合わせるだけで大丈夫です。</p>
+      <div class="row" role="group" aria-label="時間">
+        ${[3,5,10,15].map(m=>`<button class="chip" data-min="${m}" aria-pressed="${timer.total===m*60}">${m}分</button>`).join('')}
+      </div>
+      <div class="breath"><div class="ring"></div><div class="orb" id="orb"></div><div class="breath-label" id="blabel">準備ができたら開始</div></div>
+      <div class="clock" id="clock">${fmt(timer.left)}</div>
+      <div class="row" style="justify-content:center">
+        <button class="btn primary" id="tstart">${timer.running?'一時停止':'開始'}</button>
+        <button class="btn ghost" id="treset">リセット</button>
+      </div>
+      <p class="muted small" style="text-align:center">画面を消しても、ほかのアプリに移っても時間は進みます。終了の音と振動は画面がついているときに鳴ります。</p>
+    </section>
+
+    <section class="panel" aria-labelledby="s2">
+      <div class="step"><span class="n">2</span><h2 id="s2">一日をふりかえる</h2>${doneJ?'<span class="done-tag">保存済み</span>':''}</div>
+      <div class="f"><span class="small" style="font-weight:500">今日の調子</span>
+        <div class="mood" role="group" aria-label="今日の調子">
+          ${MOODS.map((m,i)=>`<button class="chip" data-mood="${i+1}" aria-pressed="${d.mood===i+1}">${m}</button>`).join('')}
+        </div>
+      </div>
+      <label class="f">良かったこと<textarea id="j-good" placeholder="小さなことでOK。例：会議を早く終えられた">${esc(d.good)}</textarea></label>
+      <label class="f">今日の学び<textarea id="j-learn" placeholder="仕事でも生活でも。学びタブに積み上がります">${esc((S.learns.find(l=>l.id===d.learnId)||{}).text)}</textarea></label>
+      <label class="f">明日の一歩<input type="text" id="j-next" placeholder="例：朝イチで見積を送る" value="${esc(d.next)}"></label>
+      <div class="row">
+        <button class="btn primary" id="jsave" style="flex:1">ふりかえりを保存</button>
+        <button class="btn" id="jtrans">英語にする</button>
+      </div>
+      <div id="en-box">${enBlock(d)}</div>
+      ${doneJ?`<button class="linkbtn" id="jmove" style="align-self:flex-start">${pendingMove?'もう一度押すと、昨日の分に移して空欄にします':'これは昨日の記入？ → 昨日の分に移して新しく書く'}</button>`:''}
+    </section>
+
+    <section class="panel" aria-labelledby="s3">
+      <div class="step"><span class="n">3</span><h2 id="s3">今日の習慣</h2><span class="done-tag mono">${(d.habits||[]).length}/${S.habits.length}</span></div>
+      <div>${S.habits.map(h=>`
+        <div class="habit">
+          <button class="check" data-habit="${h.id}" aria-pressed="${(d.habits||[]).includes(h.id)}" aria-label="${esc(h.name)}"></button>
+          <span class="name">${esc(h.name)}</span>
+          <span class="streak">${habitStreak(h.id)}日</span>
+        </div>`).join('') || '<p class="muted small">習慣タブで追加できます。</p>'}</div>
+    </section>
+  </div>`;
+
+  view.querySelectorAll('[data-min]').forEach(b => b.onclick = () => { if (timer.running) return; timer.total = timer.left = +b.dataset.min*60; viewTonight(); });
+  document.getElementById('tstart').onclick = toggleTimer;
+  document.getElementById('treset').onclick = () => { stopTimer(); timer.left = timer.total; viewTonight(); };
+  if (timer.running) tick();
+  view.querySelectorAll('[data-mood]').forEach(b => b.onclick = () => {
+    view.querySelectorAll('[data-mood]').forEach(x => x.setAttribute('aria-pressed', x===b));
+    view.dataset.mood = b.dataset.mood;
   });
-  render();
-})();
+  view.dataset.mood = d.mood || '';
+  document.getElementById('jsave').onclick = saveJournal;
+  document.getElementById('jtrans').onclick = translateJournal;
+  const mv = document.getElementById('jmove');
+  if (mv) mv.onclick = () => { if (pendingMove){ pendingMove = false; moveToYesterday(); } else { pendingMove = true; viewTonight(); } };
+  bindEnCopy();
+  view.querySelectorAll('[data-habit]').forEach(b => b.onclick = () => { toggleHabit(TODAY, b.dataset.habit); viewTonight(); });
+  if (timer.running) runPhase(0);
+}
+function fmt(s){ return `${pad(Math.floor(s/60))}:${pad(s%60)}`; }
+
+let actx = null;
+function chime(){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    [528, 792].forEach((f,i) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.frequency.value = f; o.type = 'sine';
+      g.gain.setValueAtTime(0.0001, actx.currentTime + i*0.4);
+      g.gain.exponentialRampToValueAtTime(0.25, actx.currentTime + i*0.4 + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + i*0.4 + 3);
+      o.connect(g).connect(actx.destination); o.start(actx.currentTime + i*0.4); o.stop(actx.currentTime + i*0.4 + 3.1);
+    });
+  }catch(e){}
+}
+function haptic(){
+  // Android などは Vibration API、iPhone（iOS 18 以降）はスイッチ部品の触覚フィードバックを使う
+  try { if (navigator.vibrate && navigator.vibrate([300,150,300,150,600])) return; } catch(e){}
+  const l = document.getElementById('hap'); if (!l) return;
+  [0,250,500,900,1150,1400].forEach(t => setTimeout(() => { try { l.click(); } catch(e){} }, t));
+}
+async function keepAwake(){
+  try { if (!wake && navigator.wakeLock) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } } catch(e){ wake = null; }
+}
+function tick(){
+  if (!timer.running) return;
+  timer.left = Math.max(0, Math.ceil((timer.endAt - Date.now())/1000));
+  const c = document.getElementById('clock'); if (c) c.textContent = fmt(timer.left);
+  if (timer.left <= 0) finishTimer();
+}
+function startTicking(){
+  clearInterval(timer.iv);
+  timer.iv = setInterval(tick, 500);
+  tick();
+}
+function iosTimerUrl(sec){
+  return 'shortcuts://run-shortcut?name=' + encodeURIComponent('夜のノート瞑想') + '&input=text&text=' + Math.ceil(sec/60);
+}
+async function toggleTimer(){
+  if (timer.running){
+    timer.running = false; clearInterval(timer.iv); clearTimeout(timer.phaseT);
+    try { wake && wake.release(); } catch(e){} wake = null;
+    saveTimer(); viewTonight(); return;
+  }
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
+  try { actx = actx || new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); } catch(e){}
+  keepAwake();
+  timer.running = true;
+  timer.endAt = Date.now() + timer.left*1000;
+  timer.startDay = TODAY;
+  saveTimer();
+  startTicking();
+  document.getElementById('tstart').textContent = '一時停止';
+  runPhase(0);
+  if (S.settings.iosTimer) location.href = iosTimerUrl(timer.left);
+}
+function runPhase(i){
+  clearTimeout(timer.phaseT);
+  const orb = document.getElementById('orb'), lab = document.getElementById('blabel');
+  if (!orb || !timer.running) return;
+  const [name, sec, scale] = PHASES[i % PHASES.length];
+  orb.style.transitionDuration = sec + 's';
+  orb.style.transform = `scale(${scale})`;
+  lab.textContent = name;
+  timer.phaseT = setTimeout(() => runPhase(i+1), sec*1000);
+}
+function stopTimer(){
+  timer.running = false; clearInterval(timer.iv); clearTimeout(timer.phaseT);
+  try { wake && wake.release(); } catch(e){} wake = null;
+  saveTimer();
+}
+function finishTimer(late){
+  const mins = Math.round(timer.total/60), dayKey = timer.startDay || TODAY;
+  stopTimer();
+  if (!late){ chime(); haptic(); }
+  day(dayKey).med = (day(dayKey).med || 0) + mins; save();
+  timer.left = timer.total;
+  toast(late ? `離れている間に${mins}分の瞑想が終わりました` : `${mins}分の瞑想を記録しました`);
+  if (current === 'tonight') viewTonight();
+}
+function restoreTimer(){
+  try {
+    const t = JSON.parse(localStorage.getItem(TKEY) || 'null');
+    if (!t || !t.endAt) return;
+    timer.total = t.total; timer.endAt = t.endAt; timer.startDay = t.startDay; timer.running = true;
+    if (Date.now() >= t.endAt) finishTimer(true);
+    else { startTicking(); keepAwake(); if (current === 'tonight') viewTonight(); }
+  } catch(e){}
+}
+/* ---------- English ---------- */
+const EN_LABEL = { good:'GOOD THING', learn:'LEARNING', next:'NEXT STEP' };
+function enBlock(d){
+  if (!d || !d.en) return '';
+  const keys = ['good','learn','next'].filter(k => d.en[k]);
+  if (!keys.length) return '';
+  return `<div class="en"><dl>${keys.map(k=>`<div><dt>${EN_LABEL[k]}</dt><dd>${esc(d.en[k])}</dd></div>`).join('')}</dl>
+    <div class="row"><button class="btn ghost small" id="en-copy">英文をコピー</button></div></div>`;
+}
+function bindEnCopy(){
+  const b = document.getElementById('en-copy'); if (!b) return;
+  b.onclick = async () => {
+    const d = peek(TODAY); if (!d || !d.en) return;
+    const txt = ['good','learn','next'].filter(k => d.en[k]).map(k => d.en[k]).join('\n');
+    try { await navigator.clipboard.writeText(txt); toast('英文をコピーしました'); } catch(e){ toast('長押しで選択してコピーしてください'); }
+  };
+}
+async function toEnglish(text){
+  const r = await fetch('https://api.mymemory.translated.net/get?langpair=ja|en&q=' + encodeURIComponent(text));
+  if (!r.ok) throw new Error('http');
+  const j = await r.json();
+  const t = j && j.responseData && j.responseData.translatedText;
+  if (!t || j.responseStatus != 200) throw new Error('bad');
+  return t;
+}
+async function translateJournal(){
+  const vals = {
+    good: document.getElementById('j-good').value.trim(),
+    learn: document.getElementById('j-learn').value.trim(),
+    next: document.getElementById('j-next').value.trim()
+  };
+  const keys = Object.keys(vals).filter(k => vals[k]);
+  if (!keys.length){ toast('先にふりかえりを書いてください'); return; }
+  const btn = document.getElementById('jtrans'); btn.disabled = true; btn.textContent = '変換中…';
+  try {
+    const out = {};
+    for (const k of keys) out[k] = await toEnglish(vals[k]);
+    saveJournal(true);
+    const d = day(TODAY); d.en = out;
+    const l = S.learns.find(x => x.id === d.learnId); if (l) l.en = out.learn || '';
+    save(); viewTonight(); toast('英語にしました');
+  } catch(e){
+    btn.disabled = false; btn.textContent = '英語にする';
+    const all = keys.map(k => vals[k]).join('\n');
+    document.getElementById('en-box').innerHTML = `<div class="en"><p class="small">いまは変換できませんでした。電波のある場所でもう一度押すか、Google翻訳で開いてください。</p>
+      <a class="btn" style="text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://translate.google.com/?sl=ja&tl=en&op=translate&text=${encodeURIComponent(all)}">Google翻訳で開く</a></div>`;
+  }
+}
+let pendingMove = false;
+function moveToYesterday(){
+  const y = ymd(addDays(base(), -1));
+  const d = day(TODAY), p = day(y);
+  const join = (a,b) => [a,b].filter(Boolean).join('\n');
+  if (p.journal){
+    p.good = join(p.good, d.good); p.next = join(p.next, d.next); p.mood = p.mood || d.mood;
+    if (d.learnId){ const l = S.learns.find(x => x.id === d.learnId); if (l) l.date = y; }
+  } else {
+    Object.assign(p, { mood:d.mood, good:d.good, next:d.next, en:d.en, journal:true, savedAt:d.savedAt });
+    if (d.learnId){ p.learnId = d.learnId; const l = S.learns.find(x => x.id === d.learnId); if (l) l.date = y; }
+  }
+  Object.assign(d, { mood:0, good:'', next:'', journal:false }); delete d.en; delete d.learnId; delete d.savedAt;
+  save(); toast('昨日の分に移しました。今日の分を書けます'); viewTonight();
+}
+function saveJournal(silent){
+  const d = day(TODAY);
+  d.mood = +view.dataset.mood || 0;
+  d.good = document.getElementById('j-good').value.trim();
+  d.next = document.getElementById('j-next').value.trim();
+  const lt = document.getElementById('j-learn').value.trim();
+  if (lt){
+    let l = S.learns.find(x => x.id === d.learnId);
+    if (l) l.text = lt; else { l = {id:'l'+Date.now(), date:TODAY, text:lt}; S.learns.push(l); d.learnId = l.id; }
+  } else if (d.learnId){ S.learns = S.learns.filter(x => x.id !== d.learnId); delete d.learnId; }
+  d.journal = !!(d.mood || d.good || d.next || lt);
+  d.savedAt = Date.now();
+  save();
+  if (silent === true) return;
+  toast('ふりかえりを保存しました'); viewTonight();
+}
+
+/* ---------- habits ---------- */
+function toggleHabit(date, id){
+  const d = day(date); d.habits = d.habits || [];
+  d.habits = d.habits.includes(id) ? d.habits.filter(x => x !== id) : [...d.habits, id];
+  save();
+}
+function habitStreak(id){ return streakOf(d => d && d.habits && d.habits.includes(id)); }
+let pendingDelete = null;
+function viewHabits(){
+  const last7 = [...Array(7)].map((_,i) => ymd(addDays(base(), i-6)));
+  view.innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div><h2>習慣</h2><p class="muted small">直近7日。日付のマスをタップすると、つけ忘れた日も直せます。</p></div>
+    <section class="panel">
+      <div>${S.habits.map(h=>`
+        <div class="hblock">
+          <div class="hhead">
+            <span class="name">${esc(h.name)}</span>
+            <span class="streak">${habitStreak(h.id)}日連続</span>
+          </div>
+          <div class="week">${last7.map(dt=>{const dd=new Date(dt+'T00:00'),on=(peek(dt)?.habits||[]).includes(h.id);return `<button class="cell ${on?'on':''} ${dt===TODAY?'today':''}" data-d="${dt}" data-h="${h.id}" aria-pressed="${on}" aria-label="${dd.getMonth()+1}月${dd.getDate()}日 ${esc(h.name)}"><span class="w">${dt===TODAY?'今日':WD[dd.getDay()]}</span><span class="n">${dd.getDate()}</span></button>`}).join('')}</div>
+          <div class="row" style="justify-content:flex-end"><button class="linkbtn" data-del="${h.id}">${pendingDelete===h.id?'もう一度押すと削除':'この習慣を削除'}</button></div>
+        </div>`).join('')}</div>
+      <form class="row" id="addh" style="flex-wrap:nowrap">
+        <input type="text" id="newh" placeholder="新しい習慣（例：腕立て10回）" maxlength="30">
+        <button class="btn primary" style="flex:none">追加</button>
+      </form>
+    </section>
+    <p class="muted small">小さく始めるのがコツです。「2分でできること」から1つ足してみてください。</p>
+  </div>`;
+  view.querySelectorAll('.cell').forEach(b => b.onclick = () => { toggleHabit(b.dataset.d, b.dataset.h); viewHabits(); });
+  view.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    const id = b.dataset.del;
+    if (pendingDelete === id){ S.habits = S.habits.filter(h => h.id !== id); pendingDelete = null; save(); toast('習慣を削除しました'); }
+    else pendingDelete = id;
+    viewHabits();
+  });
+  document.getElementById('addh').onsubmit = e => {
+    e.preventDefault(); const v = document.getElementById('newh').value.trim(); if (!v) return;
+    S.habits.push({id:'h'+Date.now(), name:v}); save(); toast('習慣を追加しました'); viewHabits();
+  };
+}
+
+/* ---------- learnings ---------- */
+let q = '';
+function recallPick(){
+  if (!S.learns.length) return null;
+  for (const back of [7,30,14,3]){ const dt = ymd(addDays(base(),-back)); const l = S.learns.find(x => x.date === dt); if (l) return {l, label:`${back}日前のあなたの学び`}; }
+  const past = S.learns.filter(x => x.date !== TODAY); if (!past.length) return null;
+  const l = past[base().getDate() % past.length];
+  return {l, label:'以前のあなたの学び'};
+}
+function viewLearn(){
+  const list = [...S.learns].sort((a,b) => b.date.localeCompare(a.date)).filter(l => !q || l.text.includes(q));
+  const rc = recallPick();
+  view.innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="row" style="justify-content:space-between"><h2>学びの本棚</h2><span class="mono muted small">${S.learns.length}件</span></div>
+    ${rc ? `<div class="recall"><span class="eyebrow">${rc.label}</span><blockquote>${esc(rc.l.text)}</blockquote><span class="small muted">読み返すと定着しやすくなります。</span></div>`:''}
+    <form class="row" id="addl" style="flex-wrap:nowrap">
+      <input type="text" id="newl" placeholder="学びをすぐメモ" maxlength="120">
+      <button class="btn primary" style="flex:none">追加</button>
+    </form>
+    <input type="search" id="ql" placeholder="学びを検索" value="${esc(q)}">
+    <section class="panel" style="gap:0">${list.map(l=>`
+      <div class="learn"><span class="d">${l.date.replace(/-/g,'.')}</span><span>${esc(l.text)}</span>${l.en?`<span class="en-line">${esc(l.en)}</span>`:''}</div>`).join('') || '<p class="muted small">まだ学びがありません。今夜のふりかえりで1つ書いてみましょう。</p>'}</section>
+  </div>`;
+  document.getElementById('ql').oninput = e => { q = e.target.value; const pos = e.target.selectionStart; viewLearn(); const n = document.getElementById('ql'); n.focus(); n.setSelectionRange(pos,pos); };
+  document.getElementById('addl').onsubmit = e => {
+    e.preventDefault(); const v = document.getElementById('newl').value.trim(); if (!v) return;
+    S.learns.push({id:'l'+Date.now(), date:TODAY, text:v}); save(); toast('学びを追加しました'); viewLearn();
+  };
+}
+
+/* ---------- life ---------- */
+function level(d){
+  if (!d) return 0;
+  let s = 0; if (d.med > 0) s++; if (d.journal) s++;
+  if (S.habits.length && (d.habits||[]).length / S.habits.length >= 0.5) s++;
+  return s;
+}
+function viewLife(){
+  const ds = Object.values(S.days);
+  const nights = ds.filter(active).length;
+  const streak = streakOf(active);
+  const medMin = ds.reduce((a,d) => a + (d.med||0), 0);
+  // heatmap: 12 weeks, columns = weeks starting Monday
+  const now = base(); const dow = (now.getDay()+6)%7;
+  const start = addDays(now, -dow - 7*11);
+  let cells = '';
+  for (let i = 0; i < 84; i++){
+    const dt = addDays(start, i), key = ymd(dt);
+    if (key > TODAY){ cells += '<i class="fut"></i>'; continue; }
+    cells += `<i class="l${level(peek(key))}${key===TODAY?' today':''}" title="${key}"></i>`;
+  }
+  // mood sparkline 30 days
+  const W = 300, H = 90, L = 22, pts = [];
+  for (let i = 29; i >= 0; i--){ const d = peek(ymd(addDays(now,-i))); if (d && d.mood) pts.push([L + (29-i)*(W-L-6)/29, 8 + (5-d.mood)*(H-22)/4]); }
+  const path = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const last = pts[pts.length-1];
+  const ylab = [5,3,1].map(m => `<text x="0" y="${8+(5-m)*(H-22)/4+3}">${m}</text><line x1="${L}" x2="${W}" y1="${8+(5-m)*(H-22)/4}" y2="${8+(5-m)*(H-22)/4}" stroke="var(--line)" stroke-dasharray="2 3"/>`).join('');
+
+  view.innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div><h2>人生のログ</h2><p class="muted small">続けた夜が、そのまま地図になります。</p></div>
+    <div class="stats">
+      <div class="stat"><div class="v">${streak}<small>夜</small></div><div class="k">いまの連続</div></div>
+      <div class="stat"><div class="v">${nights}<small>夜</small></div><div class="k">続けた夜の合計</div></div>
+      <div class="stat"><div class="v">${(medMin/60).toFixed(1)}<small>時間</small></div><div class="k">瞑想した時間</div></div>
+      <div class="stat"><div class="v">${S.learns.length}<small>件</small></div><div class="k">積み上げた学び</div></div>
+    </div>
+    <section class="panel">
+      <div class="row" style="justify-content:space-between"><h3>直近12週</h3><span class="small muted">瞑想・ふりかえり・習慣</span></div>
+      <div class="heat-wrap"><div class="heat">${cells}</div></div>
+      <div class="legend">少<i style="background:var(--heat0)"></i><i style="background:color-mix(in srgb,var(--accent) 30%,var(--heat0))"></i><i style="background:color-mix(in srgb,var(--accent) 62%,var(--heat0))"></i><i style="background:var(--accent)"></i>多</div>
+    </section>
+    <section class="panel">
+      <div class="row" style="justify-content:space-between"><h3>調子の波（30日）</h3><span class="small muted">5 = いい日</span></div>
+      ${pts.length > 1 ? `<svg class="spark" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="直近30日の調子の推移">
+        ${ylab}
+        <path d="${path} L${last[0]} ${H-14} L${pts[0][0]} ${H-14} Z" fill="color-mix(in srgb,var(--moon) 14%,transparent)"/>
+        <path d="${path}" fill="none" stroke="var(--moon)" stroke-width="1.8" stroke-linejoin="round"/>
+        <circle cx="${last[0]}" cy="${last[1]}" r="3.5" fill="var(--accent)"/>
+        <text x="${L}" y="${H-2}">30日前</text><text x="${W-18}" y="${H-2}">今日</text>
+      </svg>` : '<p class="muted small">ふりかえりで調子を記録すると、ここに波が描かれます。</p>'}
+    </section>
+    <section class="panel">
+      <h3>設定</h3>
+      <div class="setrow">
+        <label for="reset-hour">1日の切り替え時刻</label>
+        <select id="reset-hour">${[0,1,2,3,4,5,6].map(h=>`<option value="${h}" ${RESET===h?'selected':''}>${h}:00</option>`).join('')}</select>
+      </div>
+      <p class="small muted">この時刻をすぎて開くと、新しい日の記入欄になります。たとえば2:00なら、深夜1時の記入は前日の分として残ります。</p>
+      <div class="setrow">
+        <label for="ios-timer">iPhoneのタイマーと連動</label>
+        <input type="checkbox" id="ios-timer" switch ${S.settings.iosTimer?'checked':''}>
+      </div>
+      <p class="small muted">オンにすると、瞑想の開始時にショートカット「夜のノート瞑想」を呼び出します。iPhone標準のタイマーで鳴らすので、画面がロックされていても終了時に音と振動で知らせます。</p>
+    </section>
+    <section class="panel">
+      <h3>データ</h3>
+      <p class="small muted">記録はこの端末のブラウザだけに保存されます。機種変更の前にコピーして保管してください。</p>
+      <div class="row"><button class="btn" id="copy">記録をコピー</button><button class="btn" id="imp">記録を読み込む</button><button class="btn ghost" id="theme">表示：${themeLabel()}</button></div>
+      <textarea id="dump" hidden readonly></textarea>
+      <div id="impbox" hidden style="display:flex;flex-direction:column;gap:8px">
+        <textarea id="imptext" placeholder="コピーした記録をここに貼り付け"></textarea>
+        <button class="btn primary" id="impgo">この記録で置き換える</button>
+      </div>
+    </section>
+  </div>`;
+  document.getElementById('copy').onclick = async () => {
+    const txt = JSON.stringify(S);
+    try { await navigator.clipboard.writeText(txt); toast('記録をコピーしました'); }
+    catch(e){ const t = document.getElementById('dump'); t.hidden = false; t.value = txt; t.select(); toast('下の欄から手動でコピーしてください'); }
+  };
+  document.getElementById('imp').onclick = () => { const b = document.getElementById('impbox'); b.hidden = !b.hidden; };
+  document.getElementById('impgo').onclick = () => {
+    try {
+      const d = JSON.parse(document.getElementById('imptext').value);
+      if (!d || !Array.isArray(d.habits) || typeof d.days !== 'object' || !Array.isArray(d.learns)) throw 0;
+      S = d; S.settings = Object.assign({ resetHour:2, iosTimer:false }, S.settings); RESET = S.settings.resetHour; refreshDay(); save(); header(); toast('記録を読み込みました'); viewLife();
+    } catch(e){ toast('読み込めませんでした。「記録をコピー」した文字をそのまま貼ってください'); }
+  };
+  document.getElementById('reset-hour').onchange = e => {
+    S.settings.resetHour = RESET = +e.target.value; save(); refreshDay(); header(); toast(`切り替え時刻を${RESET}:00にしました`);
+  };
+  document.getElementById('ios-timer').onchange = e => { S.settings.iosTimer = e.target.checked; save(); };
+  document.getElementById('theme').onclick = () => {
+    const cur = document.documentElement.dataset.theme;
+    const next = cur === 'dark' ? 'light' : cur === 'light' ? '' : 'dark';
+    if (next) document.documentElement.dataset.theme = next; else delete document.documentElement.dataset.theme;
+    try { localStorage.setItem(KEY+'-theme', next); } catch(e){}
+    viewLife();
+  };
+}
+function themeLabel(){ const t = document.documentElement.dataset.theme; return t==='dark'?'夜':t==='light'?'昼':'自動'; }
+
+/* ---------- router ---------- */
+let current = 'tonight';
+const VIEWS = { tonight:viewTonight, habits:viewHabits, learn:viewLearn, life:viewLife };
+function go(tab){
+  current = tab; pendingDelete = null; pendingMove = false;
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-current', t.dataset.tab===tab ? 'page' : 'false'));
+  VIEWS[tab](); window.scrollTo(0,0);
+}
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => go(t.dataset.tab));
+document.getElementById('clear-sample').onclick = () => {
+  S = { habits:S.habits, days:{}, learns:[], sample:false, settings:S.settings }; save(); header(); go(current); toast('サンプルを消しました');
+};
+try { const t = localStorage.getItem(KEY+'-theme'); if (t) document.documentElement.dataset.theme = t; } catch(e){}
+header();
+const hash = location.hash.slice(1);
+go(VIEWS[hash] ? hash : 'tonight');
+restoreTimer();
+function onReturn(){
+  if (document.visibilityState !== 'visible') return;
+  if (refreshDay()){ header(); go(current); toast('新しい日になりました'); }
+  if (timer.running){ tick(); keepAwake(); }
+}
+document.addEventListener('visibilitychange', onReturn);
+window.addEventListener('pageshow', onReturn);
+window.addEventListener('focus', onReturn);
+setInterval(() => { const a = document.activeElement; if (a && /TEXTAREA|INPUT/.test(a.tagName)) return; if (refreshDay()){ header(); go(current); } }, 60000);
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (VIEWS[h]) go(h); });
 </script>
+
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}</script>
 </body>
 </html>
