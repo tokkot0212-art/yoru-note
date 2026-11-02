@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>夜のノート</title>
+<title>日々のノート</title>
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#0f1524">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="夜のノート">
+<meta name="apple-mobile-web-app-title" content="日々のノート">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
@@ -23,7 +23,7 @@
 :root{
   --bg:#0f1524; --surface:#172036; --surface2:#1f2a44; --line:#2a3654;
   --fg:#e7e9f0; --muted:#8f9bb8; --accent:#e8b86a; --accent-ink:#1a1408;
-  --moon:#a8bbeb; --good:#7cc4a4; --heat0:#1c2640;
+  --moon:#a8bbeb; --good:#7cc4a4; --bad:#e8857a; --heat0:#1c2640;
   --display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
   --body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
@@ -32,11 +32,11 @@
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
   --bg:#eef1f6; --surface:#ffffff; --surface2:#e4e9f2; --line:#d3dae6;
   --fg:#1a2236; --muted:#5d6a85; --accent:#a86d14; --accent-ink:#ffffff;
-  --moon:#4a63a8; --good:#2f8a63; --heat0:#e1e6ef; color-scheme:light}}
+  --moon:#4a63a8; --good:#2f8a63; --bad:#c2473b; --heat0:#e1e6ef; color-scheme:light}}
 :root[data-theme="light"]{
   --bg:#eef1f6; --surface:#ffffff; --surface2:#e4e9f2; --line:#d3dae6;
   --fg:#1a2236; --muted:#5d6a85; --accent:#a86d14; --accent-ink:#ffffff;
-  --moon:#4a63a8; --good:#2f8a63; --heat0:#e1e6ef; color-scheme:light}
+  --moon:#4a63a8; --good:#2f8a63; --bad:#c2473b; --heat0:#e1e6ef; color-scheme:light}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -80,6 +80,22 @@ button{font:inherit;color:inherit;cursor:pointer}
 .orb{width:86px;height:86px;border-radius:50%;
   background:radial-gradient(circle at 40% 35%,color-mix(in srgb,var(--accent) 85%,white),color-mix(in srgb,var(--accent) 35%,transparent) 70%);
   transform:scale(1);transition-property:transform;transition-timing-function:ease-in-out}
+.mantra{font-family:var(--display);font-size:1rem;line-height:1.6;color:var(--muted);text-align:center;min-height:3.2em;margin:-4px 0 0;padding-inline:8px;text-wrap:balance;opacity:.85}
+.mantra.in{animation:mfade 1.2s ease}
+@keyframes mfade{from{opacity:0;transform:translateY(4px)}to{opacity:.85;transform:none}}
+details.mset{border-top:1px solid var(--line);padding-top:6px;display:flex;flex-direction:column}
+details.mset summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;padding-block:6px;font-weight:500;font-size:.9rem}
+details.mset summary::-webkit-details-marker{display:none}
+details.mset[open] summary{margin-bottom:6px}
+details.mset > *:not(summary){margin-bottom:8px}
+.mcat{display:flex;flex-direction:column;padding-top:8px}
+.mcat-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding-bottom:4px}
+.mcat-h b{font-size:.9rem;color:var(--accent)}
+.mcat-h .linkbtn{margin-left:auto}
+.mlist{display:flex;flex-direction:column}
+.mitem{display:flex;align-items:center;gap:8px;padding-block:6px;border-top:1px solid var(--line)}
+.mitem label{display:flex;align-items:center;gap:10px;flex:1;min-width:0;font-size:.9rem}
+.mitem input{width:18px;height:18px;accent-color:var(--good);flex:none}
 .breath-label{position:absolute;bottom:6px;font-size:.9rem;color:var(--muted)}
 .clock{font-family:var(--mono);font-size:2.4rem;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.04em}
 
@@ -113,7 +129,133 @@ textarea{min-height:64px;resize:vertical}
 .cell.today{border-color:var(--accent)}
 .cell.on.today{box-shadow:0 0 0 2px var(--accent)}
 .cell:active{transform:scale(.94)}
+.cell.ro:active{transform:none}
+.cell.ro{cursor:default}
 .cell:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.q{display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:1px solid var(--line)}
+.qh{display:flex;align-items:center;gap:10px}
+.qh h3{font-size:.98rem}
+.qn{font-family:var(--mono);font-size:.72rem;color:var(--accent);width:22px;height:22px;border-radius:6px;border:1px solid var(--accent);display:grid;place-items:center;flex:none}
+.hint{font-size:.8rem;color:var(--muted);line-height:1.55}
+.feels{display:flex;flex-wrap:wrap;gap:6px}
+.chip.sm{font-size:.8rem;padding:4px 10px}
+.three{display:flex;flex-direction:column;gap:6px}
+.tline{display:flex;align-items:center;gap:8px}
+.tline input{min-width:0}
+.tline .mono{color:var(--muted);font-size:.8rem;width:1em;text-align:center;flex:none}
+.f.sub{font-size:.8rem;font-weight:400;color:var(--muted)}
+.ifthen{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:380px){.ifthen{grid-template-columns:1fr}}
+.plan-preview{font-family:var(--display);font-size:1rem;color:var(--accent);min-height:1.4em}
+.prompt{font-family:var(--display);font-size:1rem;line-height:1.6}
+details.more{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:0}
+details.more summary{cursor:pointer;font-weight:500;color:var(--muted);font-size:.9rem;list-style:none;padding-block:4px}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::before{content:'＋ '}
+details.more[open] summary::before{content:'－ '}
+details.more[open] summary{margin-bottom:6px}
+textarea.fade{opacity:0;transition:opacity .6s}
+.feelbar{display:flex;flex-wrap:wrap;gap:8px}
+.feelbar span{font-size:.85rem;border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+.feelbar b{font-family:var(--mono);font-weight:500;color:var(--accent);margin-left:4px}
+.wtask{display:flex;flex-direction:column;gap:8px;padding-block:12px;border-top:1px solid var(--line)}
+.whenrow{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted)}
+.whenrow input{flex:1;min-width:0;padding:7px 10px}
+.cell.mk.o{background:var(--good);border-color:var(--good)}
+.cell.mk.o .n,.cell.mk.o .w{color:var(--bg)}
+.cell.mk.t{background:var(--accent);border-color:var(--accent)}
+.cell.mk.t .n,.cell.mk.t .w{color:var(--accent-ink);font-weight:500}
+.cell.mk.x{background:var(--bad);border-color:var(--bad)}
+.cell.mk.x .n,.cell.mk.x .w{color:var(--bg);font-weight:500}
+.empty{display:flex;flex-direction:column;gap:10px;align-items:flex-start;padding:14px;border:1px dashed var(--line);border-radius:12px;font-size:.88rem;color:var(--muted)}
+details.catg{border-top:1px solid var(--line)}
+details.catg summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;padding-block:10px;font-weight:500}
+details.catg summary::-webkit-details-marker{display:none}
+.pick{display:flex;align-items:center;gap:8px;padding-block:6px}
+.pick .name,.kbtext{flex:1;min-width:0;font-size:.9rem}
+.star{background:none;border:0;padding:4px;font-size:1.05rem;color:var(--accent);line-height:1;flex:none}
+.chip.sm[aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--bg)}
+.wwhen{display:block;font-size:.76rem;color:var(--muted)}
+.ox{display:flex;gap:6px;flex:none}
+.oxb{width:40px;height:36px;border-radius:10px;border:1.5px solid var(--line);background:transparent;font-size:1.05rem;color:var(--muted)}
+.oxb.on.o{background:var(--good);border-color:var(--good);color:var(--bg)}
+.oxb.on.t{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.oxb.on.x{background:var(--bad);border-color:var(--bad);color:var(--bg);font-weight:700}
+.oxb.on{transform:scale(1.06)}
+.ox:has(.on) .oxb:not(.on){opacity:.45}
+.ox .oxb{width:38px}
+.kbhead{display:flex;flex-direction:column;gap:4px;padding-bottom:8px}
+.kbverb{font-family:var(--body);font-size:.72rem;font-weight:700;margin-left:8px;padding:2px 8px;border-radius:999px;vertical-align:middle;background:var(--surface2);color:var(--accent)}
+.kbitem{display:flex;align-items:center;gap:8px;padding-block:10px;border-top:1px solid var(--line)}
+.kbtext{display:flex;flex-direction:column;gap:2px}
+.kbtext b{font-weight:700}
+.kbtext span{font-size:.82rem;color:var(--muted);line-height:1.5}
+.kbitem .chip{flex:none;line-height:1.25;font-size:.72rem;text-align:center}
+.ftag{font-size:.7rem;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:0 6px;margin-right:6px;vertical-align:1px}
+.advice{display:flex;flex-direction:column;gap:8px;padding:16px 18px;border-radius:16px;background:var(--surface2);border:1px solid var(--line)}
+.advice .eyebrow{color:var(--accent)}
+.adv-text{font-family:var(--display);font-size:1.05rem;line-height:1.6}
+.seg{display:inline-flex;margin-top:6px;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:3px 12px;font-size:.8rem;color:var(--muted);white-space:nowrap}
+.step h2{white-space:nowrap}
+.oxb{font-size:1.1rem}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.bset{display:flex;flex-direction:column;gap:10px}
+.chip.sm .mono{font-size:.72rem;opacity:.75}
+.steppers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.stp{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;align-items:center;justify-items:center;gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:6px 4px}
+.stp span{grid-column:1/-1;font-size:.74rem;color:var(--muted)}
+.stp button{width:26px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);font-size:1rem;padding:0}
+.stp b{font-size:1.1rem;font-weight:500;white-space:nowrap}
+.stp b small{font-size:.65rem;color:var(--muted);margin-left:1px}
+button:disabled{opacity:.45;cursor:default}
+.wander{display:flex;gap:8px;justify-content:center;align-items:center}
+.wbtn{display:flex;align-items:center;gap:10px;padding:12px 18px}
+.wbtn b{font-size:1.2rem;color:var(--accent)}
+.sess.edit{align-items:center}
+.wedit{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.wedit button{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--surface2);padding:0;font-size:.9rem}
+.wedit b{min-width:1.2em;text-align:center;color:var(--fg)}
+.wedit.big button{width:34px;height:34px;font-size:1.05rem}
+.wedit.big b{font-size:1.15rem;min-width:1.8em}
+.wrow{border-top:1px dashed var(--line)}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats3 div{display:flex;flex-direction:column;gap:2px;background:var(--bg);border-radius:10px;padding:8px 10px}
+.stats3 .k{font-size:.72rem;color:var(--muted)}
+.stats3 b{font-size:1.2rem;font-weight:500}
+.dnote{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--good) 14%,transparent);border:1px solid color-mix(in srgb,var(--good) 40%,transparent)}
+.dnote b{color:var(--good)}
+.dnote span{font-size:.84rem}
+.dstatus{display:flex;justify-content:space-between;align-items:center;font-size:.86rem;padding-block:6px}
+.dstatus span{color:var(--muted)}
+.dstatus.warn b{color:var(--accent)}
+.dsum{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+.dsum li{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;padding-block:4px;border-bottom:1px solid var(--line)}
+.dsum li span{color:var(--muted)}
+.dsum li:first-child{grid-column:1/-1}
+.dsum li *{white-space:nowrap}
+.dstep{display:flex;gap:10px;align-items:flex-start;padding-top:14px;border-top:1px solid var(--line)}
+.dstep h3{font-size:.98rem;margin-bottom:2px}
+.dcol{display:flex;flex-direction:column;gap:8px}
+.dconfirm{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;border:1px solid var(--accent);background:var(--bg)}
+.panel.editing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.wkstate{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:10px;font-size:.84rem}
+.wkstate span{color:var(--muted)}
+.wkstate.edit{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.wkstate.edit b{color:var(--accent)}
+.wkstate.done{background:color-mix(in srgb,var(--good) 14%,transparent)}
+.wkstate.done b{color:var(--good)}
+.wkstate.none{background:var(--bg);border:1px dashed var(--line)}
+.simple .opt{display:none}
+.bsum{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.84rem;color:var(--muted);padding:8px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.bsum b{color:var(--fg);font-weight:500}
+.sesslist{display:flex;flex-direction:column;gap:4px}
+.sess{display:grid;grid-template-columns:3.2em 1.6em 3em 4em 1fr;gap:6px;font-size:.82rem;color:var(--muted);padding-block:4px;border-top:1px solid var(--line)}
+.sess b{color:var(--fg)}
+.mtab{display:flex;flex-direction:column}
+.mrow{display:grid;grid-template-columns:1.4fr .7fr .9fr 1.1fr;gap:6px;padding-block:7px;border-top:1px solid var(--line);font-size:.86rem}
+.mrow span:not(:first-child){text-align:right}
+.mrow.mh{font-size:.72rem;color:var(--muted);border-top:0}
 .en{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
 .en dl{margin:0;display:flex;flex-direction:column;gap:8px}
 .en dt{font-size:.74rem;color:var(--muted);font-family:var(--mono);letter-spacing:.06em}
@@ -150,15 +292,15 @@ select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--
 
 nav.tabs{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);
   border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
-nav.tabs .inner{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs .inner{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
 .tab{background:none;border:0;padding:8px 0;font-size:.78rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px}
 .tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6}
 .tab[aria-current="page"]{color:var(--accent);font-weight:700}
 
-.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:.85rem;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast{white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:.85rem;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.show{opacity:1}
 svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
-@media (prefers-reduced-motion: reduce){.orb{transition:none!important}.toast{transition:none}}
+@media (prefers-reduced-motion: reduce){.mantra.in{animation:none}.orb{transition:none!important}.toast{transition:none}}
 </style>
 
 <div class="app">
@@ -180,9 +322,10 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
 
 <nav class="tabs" aria-label="メニュー">
   <div class="inner">
-    <button class="tab" data-tab="tonight"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>今夜</button>
+    <button class="tab" data-tab="tonight"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>今日</button>
     <button class="tab" data-tab="habits"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8 12 3 3 5-6"/></svg>習慣</button>
     <button class="tab" data-tab="learn"><svg viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z"/></svg>学び</button>
+    <button class="tab" data-tab="know"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z"/></svg>知識</button>
     <button class="tab" data-tab="life"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="4" height="4"/><rect x="10" y="4" width="4" height="4"/><rect x="16" y="4" width="4" height="4"/><rect x="4" y="10" width="4" height="4"/><rect x="10" y="10" width="4" height="4"/><rect x="4" y="16" width="4" height="4"/></svg>記録</button>
   </div>
 </nav>
@@ -203,14 +346,10 @@ const WD = ['日','月','火','水','木','金','土'];
 const MOODS = ['ぐったり','いまいち','ふつう','まずまず','いい日'];
 
 /* ---------- data ---------- */
+const BASE_HABITS = [ {id:'b-meal', name:'食事'}, {id:'b-sleep', name:'睡眠'}, {id:'b-move', name:'運動'}, {id:'b-focus', name:'OBL'} ];
 function seed(){
   let r = 7; const rnd = () => (r = (r*16807) % 2147483647) / 2147483647;
-  const habits = [
-    {id:'h1', name:'22時以降はスマホを置く'},
-    {id:'h2', name:'読書 10ページ'},
-    {id:'h3', name:'ストレッチ 5分'},
-    {id:'h4', name:'英単語 10個'}
-  ];
+  const habits = BASE_HABITS.map(h => ({...h}));
   const goods = ['企画書が一発で通った','後輩に感謝された','定時で上がれた','昼に散歩できた','難しい商談をまとめられた','家族と夕飯を食べた','会議を15分早く終えられた'];
   const learnsText = [
     '会議の冒頭でゴールを一行で共有すると脱線しない',
@@ -233,6 +372,7 @@ function seed(){
     const date = ymd(addDays(base(), -i));
     const d = { med:[3,5,5,10,0][Math.floor(rnd()*5)], mood: 2+Math.floor(rnd()*3.6), good:'', next:'', habits:[] };
     if (rnd() < 0.85){ d.good = goods[Math.floor(rnd()*goods.length)]; d.next = nexts[Math.floor(rnd()*nexts.length)]; d.journal = true; }
+    if (d.journal){ const fs = ['充実','疲れた','安心','焦り','感謝','穏やか','不安','うれしい']; d.feels = [fs[Math.floor(rnd()*8)], fs[Math.floor(rnd()*8)]].filter((x,i,a)=>a.indexOf(x)===i); }
     habits.forEach(h => { if (rnd() < 0.62) d.habits.push(h.id); });
     if (d.journal && rnd() < 0.5 && learns.length < learnsText.length){
       const id = 'l'+i; learns.push({id, date, text: learnsText[learns.length]}); d.learnId = id;
@@ -243,7 +383,14 @@ function seed(){
 }
 function load(){ try { const s = localStorage.getItem(KEY); if (s) return JSON.parse(s); } catch(e){} return seed(); }
 let S = load();
-S.settings = Object.assign({ resetHour:2, iosTimer:false }, S.settings);
+S.habits = (S.habits || []).map(h => h.id === 'b-focus' && h.name === '集中すること' ? {...h, name:'OBL'} : h);
+if (!S.baseHabits){
+  const cur = S.habits || [];
+  const base = BASE_HABITS.map(b => cur.find(h => h.id === b.id || h.name === b.name) || {...b});
+  S.habits = base.concat(cur.filter(h => !base.includes(h)));
+  S.baseHabits = 1;
+}
+S.settings = Object.assign({ resetHour:2, iosTimer:false, simple:true }, S.settings);
 RESET = S.settings.resetHour; TODAY = ymd(base());
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 const day = date => S.days[date] || (S.days[date] = { med:0, mood:0, good:'', next:'', habits:[] });
@@ -265,18 +412,24 @@ function header(){
   const now = base();
   document.getElementById('today-label').textContent = `${now.getMonth()+1}月${now.getDate()}日 (${WD[now.getDay()]})`;
   const h = new Date().getHours();
-  document.getElementById('greet').textContent = h >= 18 || h < 4 ? '今日もおつかれさまでした' : h < 11 ? 'おはようございます' : '今夜の準備をしておきましょう';
+  document.getElementById('greet').textContent = h >= 18 || h < 4 ? '今日もおつかれさまでした' : h < 11 ? 'おはようございます' : 'ひと息ついて、整えましょう';
   document.getElementById('sample-banner').hidden = !S.sample;
 }
 
 /* ---------- tonight ---------- */
 const TKEY = KEY + '-timer';
 let timer = { total:300, left:300, running:false, endAt:0, startDay:'', iv:null, phaseT:null };
-const PHASES = [['吸って',4,1.75],['止めて',2,1.75],['吐いて',6,1]];
+const BREATH_PRESETS = [ {name:'いつもの', i:4, h:2, e:6}, {name:'4-7-8', i:4, h:7, e:8}, {name:'ボックス', i:4, h:4, e:4}, {name:'ゆっくり', i:5, h:0, e:5} ];
+const SLOTS = [['morning','朝'],['noon','昼'],['night','夜']];
+function breath(){ return S.settings.breath || (S.settings.breath = { i:4, h:2, e:6 }); }
+function phases(){ const b = breath(); return [['吸って', b.i, 1.75], ['止めて', b.h, 1.75], ['吐いて', b.e, 1]].filter(p => p[1] > 0); }
+function autoSlot(){ const h = new Date().getHours(); return h >= 4 && h < 11 ? 'morning' : h >= 11 && h < 17 ? 'noon' : 'night'; }
+const patLabel = b => `${b.i}-${b.h}-${b.e}`;
+let medSlot = null;
 let wake = null;
 function saveTimer(){
   try {
-    if (timer.running) localStorage.setItem(TKEY, JSON.stringify({ total:timer.total, endAt:timer.endAt, startDay:timer.startDay }));
+    if (timer.running) localStorage.setItem(TKEY, JSON.stringify({ total:timer.total, endAt:timer.endAt, startDay:timer.startDay, wander:timer.wander||0, slot:timer.slot, pat:timer.pat }));
     else localStorage.removeItem(TKEY);
   } catch(e){}
 }
@@ -285,34 +438,41 @@ function viewTonight(){
   const d = peek(TODAY) || {};
   const doneMed = d.med > 0, doneJ = !!d.journal;
   view.innerHTML = `
-  <div style="display:flex;flex-direction:column;gap:16px">
+  <div class="${isSimple()?'simple':''}" style="display:flex;flex-direction:column;gap:16px">
+    ${!isSimple() || [0,6].includes(base().getDay()) ? advicePanel() : ''}
     <section class="panel" aria-labelledby="s1">
-      <div class="step"><span class="n">1</span><h2 id="s1">呼吸を整える</h2>${doneMed?`<span class="done-tag">今日 ${d.med}分 済み</span>`:''}</div>
-      <p class="muted small">4秒吸って、2秒止めて、6秒吐く。円の動きに合わせるだけで大丈夫です。</p>
+      <div class="step"><span class="n">1</span><h2 id="s1">セルフコンパッション</h2>${doneMed?`<span class="done-tag">今日 ${d.med}分 済み</span>`:''}</div>
+      ${isSimple() && !bsetOpen ? breathSummary() : breathSettings() + (isSimple() ? '<button class="linkbtn" id="bs-close" style="align-self:flex-start">設定を閉じる</button>' : '')}
       <div class="row" role="group" aria-label="時間">
-        ${[3,5,10,15].map(m=>`<button class="chip" data-min="${m}" aria-pressed="${timer.total===m*60}">${m}分</button>`).join('')}
+        ${[1,3,5,10,15].map(m=>`<button class="chip" data-min="${m}" aria-pressed="${timer.total===m*60}">${m}分</button>`).join('')}
       </div>
       <div class="breath"><div class="ring"></div><div class="orb" id="orb"></div><div class="breath-label" id="blabel">準備ができたら開始</div></div>
+      ${S.settings.mantraOn !== false && activeMantras().length ? `<p class="mantra" id="mantra" aria-live="polite">${timer.running ? '' : esc(activeMantras()[0].text)}</p>` : ''}
       <div class="clock" id="clock">${fmt(timer.left)}</div>
       <div class="row" style="justify-content:center">
         <button class="btn primary" id="tstart">${timer.running?'一時停止':'開始'}</button>
         <button class="btn ghost" id="treset">リセット</button>
       </div>
-      <p class="muted small" style="text-align:center">画面を消しても、ほかのアプリに移っても時間は進みます。終了の音と振動は画面がついているときに鳴ります。</p>
+      <div class="wander">
+        <button class="btn wbtn" id="wplus" ${timer.running?'':'disabled'}>呼吸に戻った<b class="mono" id="wcount">${timer.wander||0}</b></button>
+        <button class="btn ghost small" id="wminus" ${timer.running && timer.wander?'':'disabled'} aria-label="1回減らす">−1</button>
+      </div>
+      <p class="muted small opt" style="text-align:center">考えごとに気づいて呼吸に戻ったら、1回押します。押すのが気になるときは、終わってから下の一覧で回数を入れても大丈夫です。</p>
+      ${todaySessions(d)}
     </section>
 
     <section class="panel" aria-labelledby="s2">
-      <div class="step"><span class="n">2</span><h2 id="s2">一日をふりかえる</h2>${doneJ?'<span class="done-tag">保存済み</span>':''}</div>
-      <div class="f"><span class="small" style="font-weight:500">今日の調子</span>
-        <div class="mood" role="group" aria-label="今日の調子">
-          ${MOODS.map((m,i)=>`<button class="chip" data-mood="${i+1}" aria-pressed="${d.mood===i+1}">${m}</button>`).join('')}
-        </div>
+      <div class="step"><span class="n">2</span><h2 id="s2">ジャーナリング</h2>${doneJ?'<span class="done-tag">保存済み</span>':''}</div>
+      <span class="small muted">今日の調子</span>
+      <div class="mood" role="group" aria-label="今日の調子">
+        ${MOODS.map((m,i)=>`<button class="chip" data-mood="${i+1}" aria-pressed="${d.mood===i+1}">${m}</button>`).join('')}
       </div>
-      <label class="f">良かったこと<textarea id="j-good" placeholder="小さなことでOK。例：会議を早く終えられた">${esc(d.good)}</textarea></label>
-      <label class="f">今日の学び<textarea id="j-learn" placeholder="仕事でも生活でも。学びタブに積み上がります">${esc((S.learns.find(l=>l.id===d.learnId)||{}).text)}</textarea></label>
-      <label class="f">明日の一歩<input type="text" id="j-next" placeholder="例：朝イチで見積を送る" value="${esc(d.next)}"></label>
+      <label class="f">今日やったこと・わかったこと<textarea id="j-did" placeholder="例：見積の進め方を部長に相談した。先に結論を言うと話が早い">${esc(learnText(d.learnId) || d.did)}</textarea></label>
+      <label class="f">失敗して学んだこと<textarea id="j-fail" placeholder="例：確認を後回しにして手戻り。送る前に数字だけは見直す">${esc(learnText(d.failId))}</textarea></label>
+      <label class="f">やりたかったけど、できなかったこと<textarea id="j-undone" placeholder="例：英語の勉強。帰りが遅くなった">${esc(d.undone)}</textarea></label>
+      <label class="f">次の一歩<input type="text" id="j-next" placeholder="例：朝、席に着いたら最初に見積を送る" value="${esc(d.next)}"></label>
       <div class="row">
-        <button class="btn primary" id="jsave" style="flex:1">ふりかえりを保存</button>
+        <button class="btn primary" id="jsave" style="flex:1">ジャーナリングを保存</button>
         <button class="btn" id="jtrans">英語にする</button>
       </div>
       <div id="en-box">${enBlock(d)}</div>
@@ -320,19 +480,28 @@ function viewTonight(){
     </section>
 
     <section class="panel" aria-labelledby="s3">
-      <div class="step"><span class="n">3</span><h2 id="s3">今日の習慣</h2><span class="done-tag mono">${(d.habits||[]).length}/${S.habits.length}</span></div>
+      <div class="step"><span class="n">3</span><h2 id="s3">成長トラッキング</h2>
+        <div class="seg" role="group" aria-label="評価する日" style="margin:0 0 0 auto"><button data-td="today" aria-pressed="${trackDay==='today'}">今日</button><button data-td="yday" aria-pressed="${trackDay==='yday'}">昨日</button></div></div>
+      <p class="hint">${trackDay==='yday' ? '<b style="color:var(--accent)">昨日の分をつけています。</b>' : ''}○できた　△少しできた　×できなかった<span class="opt">。評価はここでつけ、「習慣」タブでは結果を見られます</span></p>
       <div>${S.habits.map(h=>`
         <div class="habit">
-          <button class="check" data-habit="${h.id}" aria-pressed="${(d.habits||[]).includes(h.id)}" aria-label="${esc(h.name)}"></button>
-          <span class="name">${esc(h.name)}</span>
-          <span class="streak">${habitStreak(h.id)}日</span>
+          <span class="name">${esc(h.name)}<span class="wwhen">${habitStreak(h.id)}日連続</span></span>
+          ${oxButtons('data-habit', h.id, habitMark(trackDate(), h.id))}
         </div>`).join('') || '<p class="muted small">習慣タブで追加できます。</p>'}</div>
+      ${wanderRow()}
+      <h3 style="font-size:.95rem;margin-top:6px">ウィークリータスク</h3>
+      <div>${todayWeeklyRows()}</div>
     </section>
   </div>`;
 
   view.querySelectorAll('[data-min]').forEach(b => b.onclick = () => { if (timer.running) return; timer.total = timer.left = +b.dataset.min*60; viewTonight(); });
   document.getElementById('tstart').onclick = toggleTimer;
-  document.getElementById('treset').onclick = () => { stopTimer(); timer.left = timer.total; viewTonight(); };
+  bindBreath();
+  bindMantra();
+  const bo = document.getElementById('bs-open'); if (bo) bo.onclick = () => { bsetOpen = true; viewTonight(); };
+  const bc = document.getElementById('bs-close'); if (bc) bc.onclick = () => { bsetOpen = false; viewTonight(); };
+  const ag = document.getElementById('adv-go'); if (ag) ag.onclick = () => adviceAction && adviceAction();
+  document.getElementById('treset').onclick = () => { stopTimer(); timer.left = timer.total; timer.wander = 0; timer.endAt = 0; viewTonight(); };
   if (timer.running) tick();
   view.querySelectorAll('[data-mood]').forEach(b => b.onclick = () => {
     view.querySelectorAll('[data-mood]').forEach(x => x.setAttribute('aria-pressed', x===b));
@@ -344,10 +513,125 @@ function viewTonight(){
   const mv = document.getElementById('jmove');
   if (mv) mv.onclick = () => { if (pendingMove){ pendingMove = false; moveToYesterday(); } else { pendingMove = true; viewTonight(); } };
   bindEnCopy();
-  view.querySelectorAll('[data-habit]').forEach(b => b.onclick = () => { toggleHabit(TODAY, b.dataset.habit); viewTonight(); });
+  view.querySelectorAll('[data-habit]').forEach(b => b.onclick = () => { const id = b.dataset.habit, v = b.dataset.v, dt = trackDate(); setHabitMark(dt, id, habitMark(dt, id) === v ? '' : v); viewTonight(); });
+  view.querySelectorAll('[data-td]').forEach(b => b.onclick = () => { trackDay = b.dataset.td; viewTonight(); });
+  bindTodayWeekly();
+  view.querySelectorAll('[data-dw]').forEach(b => b.onclick = () => { adjustDayWander(trackDate(), +b.dataset.dw); viewTonight(); });
   if (timer.running) runPhase(0);
 }
 function fmt(s){ return `${pad(Math.floor(s/60))}:${pad(s%60)}`; }
+const DEFAULT_MANTRAS = [
+  '安心していられますように',
+  '心がおだやかでありますように',
+  '自分にやさしくいられますように',
+  'ありのままの自分を受け入れられますように',
+  'いま、つらさを感じている',
+  'つらさは、誰にでもあるもの',
+  'いまの自分に、思いやりを向けよう',
+  '変えられないことは、受け入れる',
+  '変えられることは、変えていく',
+  'その違いを、見きわめられますように'
+];
+const MANTRA_CATS = [
+  { key:'kind',   name:'やさしさ',   lead:'自分に慈しみを向ける言葉' },
+  { key:'hard',   name:'つらいとき', lead:'うまくいかないときに唱える言葉' },
+  { key:'accept', name:'受け入れる', lead:'変えられることと変えられないことを見分ける言葉' },
+  { key:'own',    name:'自分の言葉', lead:'本や自分で見つけた言葉' }
+];
+const defaultCat = i => i < 4 ? 'kind' : i < 7 ? 'hard' : 'accept';
+function mantras(){
+  if (!S.mantras) S.mantras = DEFAULT_MANTRAS.map((t,i) => ({ id:'m'+i, text:t, on: i < 4, cat: defaultCat(i) }));
+  S.mantras.forEach(m => { if (!m.cat){ const n = /^m(\d)$/.exec(m.id); m.cat = n ? defaultCat(+n[1]) : 'own'; } });
+  return S.mantras;
+}
+let mantraNewCat = 'own';
+function activeMantras(){ return mantras().filter(m => m.on); }
+let mantraIdx = -1, mantraEdit = false;
+function nextMantra(){
+  const a = activeMantras(); if (!a.length) return '';
+  if (S.settings.mantraOrder === 'rand' && a.length > 1){ let j; do { j = Math.floor(Math.random()*a.length); } while (j === mantraIdx); mantraIdx = j; }
+  else mantraIdx = (mantraIdx + 1) % a.length;
+  return a[mantraIdx].text;
+}
+function showMantra(text){
+  const el = document.getElementById('mantra'); if (!el) return;
+  el.classList.remove('in'); void el.offsetWidth; el.textContent = text; if (text) el.classList.add('in');
+}
+function mantraSettings(){
+  const ms = mantras(), on = S.settings.mantraOn !== false, n = ms.filter(m => m.on).length;
+  return `<details class="mset" ${mantraEdit?'open':''} id="mset">
+    <summary><span>マントラ</span><span class="small muted">${on ? `${[...new Set(ms.filter(m => m.on).map(m => MANTRA_CATS.find(c => c.key === m.cat).name))].join('・') || 'なし'}・${n}個` : 'オフ'}</span></summary>
+    <div class="setrow"><label for="mt-on">瞑想中にマントラを表示</label><input type="checkbox" id="mt-on" switch ${on?'checked':''}></div>
+    <div class="setrow"><span class="small">順番</span><div class="seg" role="group" aria-label="順番"><button data-mo="seq" aria-pressed="${S.settings.mantraOrder!=='rand'}">上から順に</button><button data-mo="rand" aria-pressed="${S.settings.mantraOrder==='rand'}">ランダム</button></div></div>
+    <p class="hint">使う言葉にチェックを入れます。吸い始めるたびに、次の言葉に切り替わります。カテゴリー名のボタンで、そのカテゴリーだけを使うように一度に切り替えられます。</p>
+    <div class="row" role="group" aria-label="カテゴリーで選ぶ">${MANTRA_CATS.map(c => { const items = ms.filter(m => m.cat === c.key), onN = items.filter(m => m.on).length; return items.length ? `<button class="chip sm" data-mcat="${c.key}" aria-pressed="${onN === items.length && onN === n}">${c.name}だけ</button>` : ''; }).join('')}</div>
+    ${MANTRA_CATS.map(c => { const items = ms.filter(m => m.cat === c.key); if (!items.length) return ''; const onN = items.filter(m => m.on).length; return `<div class="mcat">
+      <div class="mcat-h"><b>${c.name}</b><span class="small muted">${c.lead}</span><button class="linkbtn" data-mall="${c.key}">${onN === items.length ? 'すべて外す' : 'すべて使う'}</button></div>
+      <div class="mlist">${items.map(m => `<div class="mitem"><label><input type="checkbox" data-mon="${m.id}" ${m.on?'checked':''}><span>${esc(m.text)}</span></label><button class="linkbtn" data-mdel="${m.id}" aria-label="削除">${pendingDelete===m.id?'削除する':'×'}</button></div>`).join('')}</div>
+    </div>`; }).join('')}
+    <form class="dcol" id="mt-add">
+      <div class="row" role="group" aria-label="追加するカテゴリー"><span class="small muted">追加先</span>${MANTRA_CATS.map(c => `<button type="button" class="chip sm" data-mnc="${c.key}" aria-pressed="${mantraNewCat===c.key}">${c.name}</button>`).join('')}</div>
+      <div class="row" style="flex-wrap:nowrap"><input type="text" id="mt-new" placeholder="言葉を追加（本のマントラなど）" maxlength="60"><button class="btn" style="flex:none">追加</button></div>
+    </form>
+    <p class="hint">追加した言葉は、このiPhoneの中だけに保存されます。</p>
+  </details>`;
+}
+function bindMantra(){
+  const d = document.getElementById('mset'); if (!d) return;
+  d.ontoggle = () => { mantraEdit = d.open; };
+  document.getElementById('mt-on').onchange = e => { S.settings.mantraOn = e.target.checked; save(); viewTonight(); };
+  view.querySelectorAll('[data-mo]').forEach(b => b.onclick = () => { S.settings.mantraOrder = b.dataset.mo; mantraIdx = -1; save(); viewTonight(); });
+  view.querySelectorAll('[data-mon]').forEach(c => c.onchange = () => { const m = mantras().find(x => x.id === c.dataset.mon); if (m){ m.on = c.checked; mantraIdx = -1; save(); viewTonight(); } });
+  view.querySelectorAll('[data-mcat]').forEach(b => b.onclick = () => { const k = b.dataset.mcat; mantras().forEach(m => m.on = m.cat === k); mantraIdx = -1; save(); toast(`「${MANTRA_CATS.find(c => c.key === k).name}」だけを使います`); viewTonight(); });
+  view.querySelectorAll('[data-mall]').forEach(b => b.onclick = () => { const k = b.dataset.mall, items = mantras().filter(m => m.cat === k), all = items.every(m => m.on); items.forEach(m => m.on = !all); mantraIdx = -1; save(); viewTonight(); });
+  view.querySelectorAll('[data-mnc]').forEach(b => b.onclick = () => { mantraNewCat = b.dataset.mnc; view.querySelectorAll('[data-mnc]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  view.querySelectorAll('[data-mdel]').forEach(b => b.onclick = () => {
+    const id = b.dataset.mdel;
+    if (pendingDelete === id){ S.mantras = mantras().filter(x => x.id !== id); pendingDelete = null; mantraIdx = -1; save(); }
+    else pendingDelete = id;
+    viewTonight();
+  });
+  document.getElementById('mt-add').onsubmit = e => {
+    e.preventDefault(); const v = document.getElementById('mt-new').value.trim(); if (!v) return;
+    mantras().push({ id:'m'+Date.now(), text:v, on:true, cat:mantraNewCat }); save(); mantraEdit = true; toast(`「${MANTRA_CATS.find(c => c.key === mantraNewCat).name}」に追加しました`); viewTonight();
+  };
+}
+let bsetOpen = false;
+function breathSummary(){
+  const b = breath(), p = BREATH_PRESETS.find(x => x.i===b.i && x.h===b.h && x.e===b.e);
+  const slot = Object.fromEntries(SLOTS)[timer.running ? timer.slot : (medSlot || autoSlot())];
+  const on = S.settings.mantraOn !== false && activeMantras().length;
+  const cats = on ? [...new Set(activeMantras().map(m => MANTRA_CATS.find(c => c.key === m.cat).name))].join('・') : 'なし';
+  return `<div class="bsum"><span>${p ? p.name + ' ' : ''}<b class="mono">${patLabel(b)}</b>・${slot}・マントラ：${cats}</span><button class="linkbtn" id="bs-open" ${timer.running?'disabled':''}>変える</button></div>`;
+}
+function breathSettings(){
+  const b = breath(), slot = timer.running ? timer.slot : (medSlot || autoSlot()), lock = timer.running ? 'disabled' : '';
+  return `<div class="bset">
+    <div class="row" role="group" aria-label="呼吸パターン">${BREATH_PRESETS.map(p => `<button class="chip sm" data-bp="${p.i}-${p.h}-${p.e}" aria-pressed="${b.i===p.i&&b.h===p.h&&b.e===p.e}" ${lock}>${p.name}<span class="mono"> ${p.i}-${p.h}-${p.e}</span></button>`).join('')}</div>
+    <div class="steppers">${[['i','吸う'],['h','止める'],['e','吐く']].map(([k,l]) => `<div class="stp"><span>${l}</span><button data-st="${k}" data-dv="-1" ${lock} aria-label="${l}を1秒短く">−</button><b class="mono">${b[k]}<small>秒</small></b><button data-st="${k}" data-dv="1" ${lock} aria-label="${l}を1秒長く">＋</button></div>`).join('')}</div>
+    <div class="row" role="group" aria-label="時間帯"><span class="small muted">時間帯</span>${SLOTS.map(([k,l]) => `<button class="chip sm" data-slot="${k}" aria-pressed="${slot===k}" ${lock}>${l}</button>`).join('')}</div>
+    ${mantraSettings()}
+  </div>`;
+}
+function todaySessions(d){
+  const ss = (d && d.sessions) || [];
+  if (!ss.length) return '';
+  const lab = Object.fromEntries(SLOTS);
+  return `<div class="sesslist"><span class="eyebrow">今日の瞑想　戻りの回数はあとから直せます</span>${ss.map((x,i) => `<div class="sess edit"><span class="mono">${pad(new Date(x.at).getHours())}:${pad(new Date(x.at).getMinutes())}</span><span>${lab[x.slot]||''}</span><span class="mono">${x.min}分</span><span class="mono">${patLabel(x.pat)}</span><span class="wedit"><button data-sw="${i}" data-dv="-1" aria-label="戻りの回数を1回減らす">−</button><b class="mono">${x.wander}</b><button data-sw="${i}" data-dv="1" aria-label="戻りの回数を1回増やす">＋</button></span></div>`).join('')}</div>`;
+}
+function bindBreath(){
+  view.querySelectorAll('[data-bp]').forEach(b => b.onclick = () => { const [i,h,e] = b.dataset.bp.split('-').map(Number); S.settings.breath = {i,h,e}; save(); viewTonight(); });
+  view.querySelectorAll('[data-st]').forEach(b => b.onclick = () => { const br = breath(), k = b.dataset.st, min = k === 'h' ? 0 : 2; br[k] = Math.max(min, Math.min(12, br[k] + (+b.dataset.dv))); save(); viewTonight(); });
+  view.querySelectorAll('[data-slot]').forEach(b => b.onclick = () => { medSlot = b.dataset.slot; viewTonight(); });
+  const wp = document.getElementById('wplus'), wm = document.getElementById('wminus');
+  const upd = () => { document.getElementById('wcount').textContent = timer.wander; wm.disabled = !timer.wander; saveTimer(); };
+  if (wp) wp.onclick = () => { if (!timer.running) return; timer.wander = (timer.wander||0) + 1; upd(); try { navigator.vibrate && navigator.vibrate(15); } catch(e){} };
+  if (wm) wm.onclick = () => { if (timer.wander > 0){ timer.wander--; upd(); } };
+  view.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => {
+    const x = (peek(TODAY).sessions || [])[+b.dataset.sw]; if (!x) return;
+    x.wander = Math.max(0, x.wander + (+b.dataset.dv)); save(); viewTonight();
+  });
+}
 
 let actx = null;
 function chime(){
@@ -395,20 +679,22 @@ async function toggleTimer(){
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
   try { actx = actx || new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); } catch(e){}
   keepAwake();
+  if (!timer.endAt || timer.left === timer.total){ timer.wander = 0; }
+  timer.pat = {...breath()}; timer.slot = medSlot || autoSlot(); mantraIdx = -1;
   timer.running = true;
   timer.endAt = Date.now() + timer.left*1000;
   timer.startDay = TODAY;
   saveTimer();
   startTicking();
-  document.getElementById('tstart').textContent = '一時停止';
-  runPhase(0);
+  viewTonight();
   if (S.settings.iosTimer) location.href = iosTimerUrl(timer.left);
 }
 function runPhase(i){
   clearTimeout(timer.phaseT);
   const orb = document.getElementById('orb'), lab = document.getElementById('blabel');
   if (!orb || !timer.running) return;
-  const [name, sec, scale] = PHASES[i % PHASES.length];
+  const ph = phases(); const [name, sec, scale] = ph[i % ph.length];
+  if (i % ph.length === 0 && S.settings.mantraOn !== false) showMantra(nextMantra());
   orb.style.transitionDuration = sec + 's';
   orb.style.transform = `scale(${scale})`;
   lab.textContent = name;
@@ -423,7 +709,11 @@ function finishTimer(late){
   const mins = Math.round(timer.total/60), dayKey = timer.startDay || TODAY;
   stopTimer();
   if (!late){ chime(); haptic(); }
-  day(dayKey).med = (day(dayKey).med || 0) + mins; save();
+  const dd = day(dayKey);
+  dd.med = (dd.med || 0) + mins;
+  (dd.sessions = dd.sessions || []).push({ at: Date.now(), min: mins, pat: timer.pat || {...breath()}, slot: timer.slot || autoSlot(), wander: timer.wander || 0 });
+  timer.wander = 0;
+  save();
   timer.left = timer.total;
   toast(late ? `離れている間に${mins}分の瞑想が終わりました` : `${mins}分の瞑想を記録しました`);
   if (current === 'tonight') viewTonight();
@@ -432,95 +722,213 @@ function restoreTimer(){
   try {
     const t = JSON.parse(localStorage.getItem(TKEY) || 'null');
     if (!t || !t.endAt) return;
-    timer.total = t.total; timer.endAt = t.endAt; timer.startDay = t.startDay; timer.running = true;
+    timer.total = t.total; timer.endAt = t.endAt; timer.startDay = t.startDay; timer.wander = t.wander || 0; timer.slot = t.slot; timer.pat = t.pat; timer.running = true;
     if (Date.now() >= t.endAt) finishTimer(true);
     else { startTicking(); keepAwake(); if (current === 'tonight') viewTonight(); }
   } catch(e){}
 }
+/* ---------- journal content ---------- */
+const FEELS = [
+  {ja:'充実', en:'fulfilled'}, {ja:'安心', en:'relieved'}, {ja:'感謝', en:'grateful'}, {ja:'うれしい', en:'happy'},
+  {ja:'誇らしい', en:'proud'}, {ja:'穏やか', en:'calm'}, {ja:'疲れた', en:'tired'}, {ja:'焦り', en:'rushed'},
+  {ja:'不安', en:'anxious'}, {ja:'いらいら', en:'irritated'}, {ja:'もやもや', en:'unsettled'}, {ja:'さみしい', en:'lonely'}
+];
+const FEEL_EN = Object.fromEntries(FEELS.map(f => [f.ja, f.en]));
+const GOOD_PH = ['例：会議を15分早く終えられた', '例：昼に外を歩けた', '例：同僚に「助かった」と言われた'];
+const PROMPTS = [
+  '今日いちばん集中できたのはいつ？ 何がそうさせた？',
+  '今日の小さな前進は何？ 昨日より少しでも進んだことは？',
+  '今日、ありがとうを伝えたい人は誰？ 何に対して？',
+  'エネルギーが上がった瞬間と、下がった瞬間は？',
+  '来週の自分を少し楽にするために、今週できることは？',
+  '最近うまくいったやり方で、また使えそうなものは？',
+];
+const SUNDAY_PROMPT = '1年後、仕事も生活もうまくいっている自分を想像してください。何をしていて、どんな毎日ですか？';
+let moreOpen = false;
+function goodsOf(d){
+  if (!d) return ['','',''];
+  const g = Array.isArray(d.goods) ? d.goods.slice(0,3) : [d.good || ''];
+  while (g.length < 3) g.push('');
+  return g;
+}
+function planText(w, x){
+  w = (w||'').trim(); x = (x||'').trim();
+  const cond = w ? (/(たら|だら|れば|なら|とき|時|ら)$/.test(w) ? `もし${w}、` : `もし${w}なら、`) : '';
+  if (w && x) return cond + x;
+  return x || (w ? cond + '…' : '');
+}
+function promptOf(d){
+  if (d && d.qa && d.qa.q) return d.qa.q;
+  const b = base();
+  if (b.getDay() === 0) return SUNDAY_PROMPT;
+  const n = Math.floor(b.getTime() / 864e5);
+  return PROMPTS[n % PROMPTS.length];
+}
+function readForm(){
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  return {
+    mood: +view.dataset.mood || 0,
+    feels: [...view.querySelectorAll('[data-feel][aria-pressed="true"]')].map(b => b.dataset.feel),
+    goods: [v('j-g0'), v('j-g1'), v('j-g2')],
+    why: v('j-why'), learn: v('j-learn'), ifWhen: v('j-when'), ifDo: v('j-do'),
+    todo: v('j-todo'), qa: v('j-qa'), kind: v('j-kind')
+  };
+}
+
 /* ---------- English ---------- */
-const EN_LABEL = { good:'GOOD THING', learn:'LEARNING', next:'NEXT STEP' };
+const EN_ROWS = [ ['did','WHAT I DID / LEARNED'], ['fail','LEARNED FROM A MISTAKE'], ['undone',"WANTED TO DO BUT COULDN'T"], ['next','NEXT STEP'] ];
+function learnText(id){ return id ? ((S.learns.find(l => l.id === id) || {}).text || '') : ''; }
 function enBlock(d){
   if (!d || !d.en) return '';
-  const keys = ['good','learn','next'].filter(k => d.en[k]);
-  if (!keys.length) return '';
-  return `<div class="en"><dl>${keys.map(k=>`<div><dt>${EN_LABEL[k]}</dt><dd>${esc(d.en[k])}</dd></div>`).join('')}</dl>
+  const rows = EN_ROWS.filter(([k]) => d.en[k]);
+  if (!rows.length) return '';
+  return `<div class="en"><dl>${rows.map(([k,l])=>`<div><dt>${l}</dt><dd>${esc(d.en[k]).replace(/\n/g,'<br>')}</dd></div>`).join('')}</dl>
     <div class="row"><button class="btn ghost small" id="en-copy">英文をコピー</button></div></div>`;
 }
+function enPlain(e){ return EN_ROWS.filter(([k]) => e[k]).map(([k,l]) => `${l}\n${e[k]}`).join('\n\n'); }
 function bindEnCopy(){
   const b = document.getElementById('en-copy'); if (!b) return;
   b.onclick = async () => {
     const d = peek(TODAY); if (!d || !d.en) return;
-    const txt = ['good','learn','next'].filter(k => d.en[k]).map(k => d.en[k]).join('\n');
-    try { await navigator.clipboard.writeText(txt); toast('英文をコピーしました'); } catch(e){ toast('長押しで選択してコピーしてください'); }
+    try { await navigator.clipboard.writeText(enPlain(d.en)); toast('英文をコピーしました'); } catch(e){ toast('長押しで選択してコピーしてください'); }
   };
 }
 async function toEnglish(text){
-  const r = await fetch('https://api.mymemory.translated.net/get?langpair=ja|en&q=' + encodeURIComponent(text));
+  if (!text) return '';
+  const r = await fetch('https://api.mymemory.translated.net/get?langpair=ja|en&q=' + encodeURIComponent(text.slice(0, 480)));
   if (!r.ok) throw new Error('http');
   const j = await r.json();
   const t = j && j.responseData && j.responseData.translatedText;
   if (!t || j.responseStatus != 200) throw new Error('bad');
   return t;
 }
+function readForm(){
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  return { mood: +view.dataset.mood || 0, did: v('j-did'), fail: v('j-fail'), undone: v('j-undone'), next: v('j-next') };
+}
 async function translateJournal(){
-  const vals = {
-    good: document.getElementById('j-good').value.trim(),
-    learn: document.getElementById('j-learn').value.trim(),
-    next: document.getElementById('j-next').value.trim()
-  };
-  const keys = Object.keys(vals).filter(k => vals[k]);
-  if (!keys.length){ toast('先にふりかえりを書いてください'); return; }
+  const f = readForm(), keys = ['did','fail','undone','next'].filter(k => f[k]);
+  if (!keys.length){ toast('先にジャーナリングを書いてください'); return; }
   const btn = document.getElementById('jtrans'); btn.disabled = true; btn.textContent = '変換中…';
   try {
-    const out = {};
-    for (const k of keys) out[k] = await toEnglish(vals[k]);
+    const res = await Promise.all(keys.map(k => toEnglish(f[k])));
+    const out = {}; keys.forEach((k,i) => out[k] = res[i]);
     saveJournal(true);
     const d = day(TODAY); d.en = out;
-    const l = S.learns.find(x => x.id === d.learnId); if (l) l.en = out.learn || '';
+    const l1 = S.learns.find(x => x.id === d.learnId); if (l1) l1.en = out.did || '';
+    const l2 = S.learns.find(x => x.id === d.failId); if (l2) l2.en = out.fail || '';
     save(); viewTonight(); toast('英語にしました');
   } catch(e){
     btn.disabled = false; btn.textContent = '英語にする';
-    const all = keys.map(k => vals[k]).join('\n');
+    const all = keys.map(k => f[k]).join('\n\n');
     document.getElementById('en-box').innerHTML = `<div class="en"><p class="small">いまは変換できませんでした。電波のある場所でもう一度押すか、Google翻訳で開いてください。</p>
-      <a class="btn" style="text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://translate.google.com/?sl=ja&tl=en&op=translate&text=${encodeURIComponent(all)}">Google翻訳で開く</a></div>`;
+      <a class="btn" style="text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://translate.google.com/?sl=ja&tl=en&op=translate&text=${encodeURIComponent(all.slice(0, 1800))}">Google翻訳で開く</a></div>`;
   }
 }
+
+/* ---------- save / move ---------- */
+const JFIELDS = ['mood','did','undone','next','en','learnId','failId','savedAt','good','why','goods','feels','ifWhen','ifDo','todo','qa','kind'];
+const isEmpty = v => v == null || v === '' || v === 0 || (Array.isArray(v) && !v.some(Boolean));
 let pendingMove = false;
 function moveToYesterday(){
   const y = ymd(addDays(base(), -1));
   const d = day(TODAY), p = day(y);
-  const join = (a,b) => [a,b].filter(Boolean).join('\n');
-  if (p.journal){
-    p.good = join(p.good, d.good); p.next = join(p.next, d.next); p.mood = p.mood || d.mood;
-    if (d.learnId){ const l = S.learns.find(x => x.id === d.learnId); if (l) l.date = y; }
-  } else {
-    Object.assign(p, { mood:d.mood, good:d.good, next:d.next, en:d.en, journal:true, savedAt:d.savedAt });
-    if (d.learnId){ p.learnId = d.learnId; const l = S.learns.find(x => x.id === d.learnId); if (l) l.date = y; }
-  }
-  Object.assign(d, { mood:0, good:'', next:'', journal:false }); delete d.en; delete d.learnId; delete d.savedAt;
+  [d.learnId, d.failId].forEach(id => { const l = id && S.learns.find(x => x.id === id); if (l) l.date = y; });
+  JFIELDS.forEach(k => { if (isEmpty(p[k]) && !isEmpty(d[k])) p[k] = d[k]; delete d[k]; });
+  p.journal = true; d.journal = false; d.mood = 0;
   save(); toast('昨日の分に移しました。今日の分を書けます'); viewTonight();
 }
+function upsertLearn(d, field, text, kind){
+  if (text){
+    let l = S.learns.find(x => x.id === d[field]);
+    if (l){ l.text = text; l.kind = kind; }
+    else { l = { id:'l'+Date.now()+field, date:TODAY, text, kind }; S.learns.push(l); d[field] = l.id; }
+  } else if (d[field]){ S.learns = S.learns.filter(x => x.id !== d[field]); delete d[field]; }
+}
 function saveJournal(silent){
-  const d = day(TODAY);
-  d.mood = +view.dataset.mood || 0;
-  d.good = document.getElementById('j-good').value.trim();
-  d.next = document.getElementById('j-next').value.trim();
-  const lt = document.getElementById('j-learn').value.trim();
-  if (lt){
-    let l = S.learns.find(x => x.id === d.learnId);
-    if (l) l.text = lt; else { l = {id:'l'+Date.now(), date:TODAY, text:lt}; S.learns.push(l); d.learnId = l.id; }
-  } else if (d.learnId){ S.learns = S.learns.filter(x => x.id !== d.learnId); delete d.learnId; }
-  d.journal = !!(d.mood || d.good || d.next || lt);
+  const d = day(TODAY), f = readForm();
+  d.mood = f.mood; d.undone = f.undone; d.next = f.next; delete d.did;
+  upsertLearn(d, 'learnId', f.did, 'did');
+  upsertLearn(d, 'failId', f.fail, 'fail');
+  d.journal = !!(d.mood || f.did || f.fail || f.undone || f.next);
   d.savedAt = Date.now();
   save();
   if (silent === true) return;
-  toast('ふりかえりを保存しました'); viewTonight();
+  toast('ジャーナリングを保存しました'); viewTonight();
 }
 
+/* ---------- advisor ---------- */
+const DAY_THEME = ['週の見直しの日','スタートの日','実行の日','実行の日','実行の日','実行の日','計画の日'];
+function weekTally(w, days){
+  const c = { o:0, t:0, x:0 };
+  w.tasks.forEach(t => days.forEach(dd => { const m = t.marks[dd]; if (m) c[m]++; }));
+  return c;
+}
+function adviceFor(){
+  const b = base(), dow = b.getDay(), h = new Date().getHours();
+  const cw = curWeek(), nw = (S.weeks || {})[nextWeekKey()], nextN = nw ? nw.tasks.length : 0;
+  const toNext = { label:'来週のタスクを選ぶ', fn:() => { wkView = 'next'; picking = true; go('habits'); } };
+  const toCur = { label:'タスクを選ぶ', fn:() => { wkView = 'cur'; picking = true; go('habits'); } };
+  let text, action = null;
+  if (dow === 6){
+    if (!nextN){ text = '来週のウィークリータスクを今日のうちに決めておきましょう。月曜の朝、迷わず始められます。'; action = toNext; }
+    else { text = `来週のタスクは${nextN}つ準備できています。「もし〜なら」でやるタイミングまで決めておきましょう。`; action = { label:'来週のタスクを見る', fn:() => { wkView = 'next'; go('habits'); } }; }
+  } else if (dow === 0){
+    const c = weekTally(cw, weekDays(weekKey()));
+    text = cw.tasks.length ? `今週のウィークリータスクは ○${c.o} △${c.t} ×${c.x}。続いた理由と、続かなかった理由を1つずつジャーナリングに書いてみましょう。` : '今週を軽くふりかえり、来週ためしたいことを1つ決めましょう。';
+    if (!nextN) action = toNext;
+  } else if (!cw.tasks.length){
+    text = dow === 1 ? '新しい週です。ウィークリータスクを1つだけ選んで始めましょう。' : 'ウィークリータスクがまだです。1つだけでも選ぶと、毎日の成長トラッキングで手応えが見えます。';
+    action = toCur;
+  } else if (dow === 1){
+    text = `今週は「${cw.tasks.map(t => t.name.replace(/（.*?）/g,'')).join('」「')}」。最初の1回を今日のうちに。`;
+  } else {
+    const days = weekDays(weekKey()).filter(dd => dd <= TODAY);
+    const idle = cw.tasks.find(t => !days.some(dd => t.marks[dd] === 'o' || t.marks[dd] === 't'));
+    const planned = cw.tasks.filter(t => t.when);
+    if (dow === 5 && idle) text = `週の後半です。「${idle.name.replace(/（.*?）/g,'')}」はまだ○がありません。△でいいので一度ためしてみましょう。`;
+    else if (planned.length){ const t = planned[b.getDate() % planned.length]; text = `もし${t.when}なら、${t.name.replace(/（.*?）/g,'')}。`; }
+    else text = 'ウィークリータスクに「もし〜なら」のタイミングを決めると、実行しやすくなります。';
+  }
+  const sub = (h >= 21 || h < 4) ? '寝る前の1時間はスマホを遠ざけると、眠りに入りやすくなります。'
+            : (h >= 4 && h < 11) ? '朝のうちに6〜20分、外の光を浴びると体内時計が整います。' : '';
+  return { theme: DAY_THEME[dow], text, sub, action };
+}
+let adviceAction = null;
+function advicePanel(){
+  const a = adviceFor(); adviceAction = a.action && a.action.fn;
+  return `<section class="advice" aria-label="今日のひとこと">
+    <span class="eyebrow">今日は「${a.theme}」</span>
+    <p class="adv-text">${esc(a.text)}</p>
+    ${a.sub ? `<p class="hint">${esc(a.sub)}</p>` : ''}
+    ${a.action ? `<button class="btn" id="adv-go" style="align-self:flex-start">${a.action.label}</button>` : ''}
+  </section>`;
+}
+
+/* ---------- tracking day ---------- */
+let trackDay = 'today';
+function trackDate(){ return trackDay === 'yday' ? ymd(addDays(base(), -1)) : TODAY; }
+function weekFor(date){ return weekOf(weekKey(new Date(date+'T12:00'))); }
+
+/* ---------- ○△× ---------- */
+const MARK = { o:'○', t:'△', x:'×' };
+const MARK_LABEL = { o:'できた', t:'少しできた', x:'できなかった' };
+function oxButtons(attr, id, m){
+  return `<div class="ox">${['o','t','x'].map(v => `<button class="oxb ${m===v?'on '+v:''}" ${attr}="${id}" data-v="${v}" aria-pressed="${m===v}" aria-label="${MARK_LABEL[v]}">${MARK[v]}</button>`).join('')}</div>`;
+}
+const nextMark = m => m === '' ? 'o' : m === 'o' ? 't' : m === 't' ? 'x' : '';
+
 /* ---------- habits ---------- */
-function toggleHabit(date, id){
-  const d = day(date); d.habits = d.habits || [];
-  d.habits = d.habits.includes(id) ? d.habits.filter(x => x !== id) : [...d.habits, id];
+function habitMark(date, id){
+  const d = peek(date); if (!d) return '';
+  if (d.hm && d.hm[id]) return d.hm[id];
+  return (d.habits || []).includes(id) ? 'o' : '';
+}
+function setHabitMark(date, id, v){
+  const d = day(date);
+  if (!d.hm){ d.hm = {}; (d.habits || []).forEach(h => d.hm[h] = 'o'); }
+  if (v) d.hm[id] = v; else delete d.hm[id];
+  d.habits = Object.keys(d.hm).filter(k => d.hm[k] === 'o' || d.hm[k] === 't');
   save();
 }
 function habitStreak(id){ return streakOf(d => d && d.habits && d.habits.includes(id)); }
@@ -529,7 +937,9 @@ function viewHabits(){
   const last7 = [...Array(7)].map((_,i) => ymd(addDays(base(), i-6)));
   view.innerHTML = `
   <div style="display:flex;flex-direction:column;gap:16px">
-    <div><h2>習慣</h2><p class="muted small">直近7日。日付のマスをタップすると、つけ忘れた日も直せます。</p></div>
+    <div><h2>習慣</h2><p class="muted small">ウィークリータスクと毎日の習慣の結果を見る画面です。評価（○△×）は「今日」タブの成長トラッキングでつけます。つけ忘れは「昨日」に切り替えてつけられます。</p></div>
+    ${weeklyPanel()}
+    <h3 style="margin-top:4px">毎日の習慣<span class="small muted" style="font-weight:400;margin-left:8px">直近7日</span></h3>
     <section class="panel">
       <div>${S.habits.map(h=>`
         <div class="hblock">
@@ -537,7 +947,7 @@ function viewHabits(){
             <span class="name">${esc(h.name)}</span>
             <span class="streak">${habitStreak(h.id)}日連続</span>
           </div>
-          <div class="week">${last7.map(dt=>{const dd=new Date(dt+'T00:00'),on=(peek(dt)?.habits||[]).includes(h.id);return `<button class="cell ${on?'on':''} ${dt===TODAY?'today':''}" data-d="${dt}" data-h="${h.id}" aria-pressed="${on}" aria-label="${dd.getMonth()+1}月${dd.getDate()}日 ${esc(h.name)}"><span class="w">${dt===TODAY?'今日':WD[dd.getDay()]}</span><span class="n">${dd.getDate()}</span></button>`}).join('')}</div>
+          <div class="week">${last7.map(dt=>{const dd=new Date(dt+'T00:00'),m=habitMark(dt,h.id);return `<span class="cell mk ro ${m} ${dt===TODAY?'today':''}" role="img" aria-label="${dd.getMonth()+1}月${dd.getDate()}日 ${esc(h.name)} ${MARK_LABEL[m]||'未記入'}"><span class="w">${dt===TODAY?'今日':WD[dd.getDay()]}</span><span class="n">${MARK[m]||dd.getDate()}</span></span>`}).join('')}</div>
           <div class="row" style="justify-content:flex-end"><button class="linkbtn" data-del="${h.id}">${pendingDelete===h.id?'もう一度押すと削除':'この習慣を削除'}</button></div>
         </div>`).join('')}</div>
       <form class="row" id="addh" style="flex-wrap:nowrap">
@@ -545,9 +955,9 @@ function viewHabits(){
         <button class="btn primary" style="flex:none">追加</button>
       </form>
     </section>
-    <p class="muted small">小さく始めるのがコツです。「2分でできること」から1つ足してみてください。</p>
+    <p class="muted small">基本の4つ（食事・睡眠・運動・OBL）で十分です。増やすときは「2分でできること」から1つずつ。</p>
   </div>`;
-  view.querySelectorAll('.cell').forEach(b => b.onclick = () => { toggleHabit(b.dataset.d, b.dataset.h); viewHabits(); });
+  bindWeekly(viewHabits);
   view.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
     const id = b.dataset.del;
     if (pendingDelete === id){ S.habits = S.habits.filter(h => h.id !== id); pendingDelete = null; save(); toast('習慣を削除しました'); }
@@ -558,6 +968,266 @@ function viewHabits(){
     e.preventDefault(); const v = document.getElementById('newh').value.trim(); if (!v) return;
     S.habits.push({id:'h'+Date.now(), name:v}); save(); toast('習慣を追加しました'); viewHabits();
   };
+}
+
+/* ---------- weekly tasks ---------- */
+const CATALOG = [
+  { cat:'自然', items:[
+    ['n1','デジタルで自然にふれる（待ち受け・自然音）'],
+    ['n2','雄大な自然の映像を見る'],
+    ['n3','日光を浴びる（毎日6〜20分）'],
+    ['n4','公園や緑のある場所へ行く（週2回・10分以上）'] ]},
+  { cat:'睡眠', items:[
+    ['s1','睡眠を7〜9時間とる'],
+    ['s2','熟睡できたかを毎朝チェックする'],
+    ['s3','寝室を暗くする（遮光カーテン・5ルクス以下）'],
+    ['s4','メラトニンサプリを使う（使う場合は医師に相談）'],
+    ['s5','15〜20分の昼寝をとる'],
+    ['s6','寝る前にスマホを触らない'],
+    ['s7','夜の人工照明をひかえる'] ]},
+  { cat:'価値観', items:[
+    ['v1','自分の価値観をはっきりさせる'] ]},
+  { cat:'つながり', items:[
+    ['c1','友人と過ごす時間を増やす'],
+    ['c2','一緒に活動できる仲間・コミュニティに入る'],
+    ['c3','自分のことを話す機会をもつ'],
+    ['c4','親しい人との関係を深める'],
+    ['c5','ひとりで孤立する時間を減らす'] ]},
+  { cat:'腸・食事', items:[
+    ['g1','プロバイオティクスをとる'],
+    ['g2','食物繊維をとる（1日20〜27g）'],
+    ['g3','発酵食品をとる（1日40〜50g）'],
+    ['g4','抗菌・除菌グッズを使いすぎない'],
+    ['g5','部屋の空気をきれいに保つ（HEPA空気清浄機）'],
+    ['g6','抗生物質をむやみに使わない'],
+    ['g7','トランス脂肪酸（マーガリン等）を避ける'],
+    ['g8','食べすぎない（摂取カロリーをおさえる）'],
+    ['g9','精製穀物（白米・白い小麦）を減らす'],
+    ['g10','果糖ブドウ糖液糖を避ける'],
+    ['g11','ながら食べをやめる'],
+    ['g12','ジャンクフードとスナック菓子を全体の1割以下に'],
+    ['g13','オメガ3（魚・亜麻仁油）をとる'],
+    ['g14','お酒をひかえる'],
+    ['g15','オメガ6（コーン油など）を減らす'],
+    ['g16','飽和脂肪酸（バター等）をひかえる'],
+    ['g17','乳製品を減らす'],
+    ['g18','塩分を減らす'],
+    ['g19','腹八分目でやめる'] ]},
+  { cat:'メンタル・運動', items:[
+    ['m1','デジタル断食をする'],
+    ['m2','息が上がるウォーキング（週2〜3回・12分以上）'],
+    ['m3','尊敬する人のことを考える'],
+    ['m4','スマホを手の届く所に置かない'],
+    ['m5','メタ認知の質問をする（いま何を考えている？）'],
+    ['m6','有酸素運動を定期的に（45〜60分）'],
+    ['m7','長引くストレスの原因を探して減らす'],
+    ['m8','心から素晴らしいと思える体験をする'],
+    ['m9','ストレッチをする'],
+    ['m10','とらえ直し（リアプレイザル）を使う'],
+    ['m11','自分の行動に注意を向けて過ごす'],
+    ['m12','アートにふれる時間をもつ'],
+    ['m13','マインドフルに家事や食事をする'],
+    ['m14','やるべきことを小さく分け、ゲーム感覚のルールにする'] ]}
+];
+const CAT_BY_ID = {}; CATALOG.forEach(c => c.items.forEach(([id,name]) => CAT_BY_ID[id] = { name, cat:c.cat }));
+const DEFAULT_CAT_STARS = ['g1','g3','c1','c2','c3','c4','c5'];
+const WEEK_MAX_FULL = 5, WEEK_MAX_SIMPLE = 2;
+const isSimple = () => S.settings.simple !== false;
+const weekMax = () => isSimple() ? WEEK_MAX_SIMPLE : WEEK_MAX_FULL;
+let picking = false, wkView = 'cur';
+function nextWeekKey(){ return ymd(addDays(new Date(weekKey()+'T12:00'), 7)); }
+function viewKey(){ return wkView === 'next' ? nextWeekKey() : weekKey(); }
+function viewWeek(){ return weekOf(viewKey()); }
+
+function weekStart(d){ const x = new Date(d); x.setDate(x.getDate() - (x.getDay()+6)%7); return x; }
+function weekKey(d){ return ymd(weekStart(d || base())); }
+function weekDays(key){ const s = new Date(key+'T12:00'); return [...Array(7)].map((_,i) => ymd(addDays(s,i))); }
+function weekOf(key){ S.weeks = S.weeks || {}; return S.weeks[key] || (S.weeks[key] = { tasks:[] }); }
+function curWeek(){ return weekOf(weekKey()); }
+function catStars(){ if (!S.catStars) S.catStars = DEFAULT_CAT_STARS.slice(); return S.catStars; }
+function addWeekTask(name, cid, w){
+  w = w || viewWeek();
+  if (cid && w.tasks.some(t => t.cid === cid)){ toast('すでにウィークリータスクに入っています'); return false; }
+  if (w.tasks.length >= weekMax()){ toast(`ウィークリータスクは${weekMax()}つまでです`); return false; }
+  w.tasks.push({ id:'w'+Date.now()+Math.floor(Math.random()*1000), cid:cid||null, name, when:'', marks:{} });
+  save(); return true;
+}
+function cycleMark(task, date){
+  const m = nextMark(task.marks[date] || '');
+  if (m) task.marks[date] = m; else delete task.marks[date];
+  save();
+}
+function setMark(task, date, v){ if (task.marks[date] === v) delete task.marks[date]; else task.marks[date] = v; save(); }
+function fmtMD(key){ const d = new Date(key+'T12:00'); return `${d.getMonth()+1}/${d.getDate()}`; }
+
+function weeklyPanel(){
+  const key = viewKey(), w = weekOf(key), days = weekDays(key);
+  const prevKey = ymd(addDays(new Date(key+'T12:00'), -7)), prev = S.weeks && S.weeks[prevKey];
+  return `
+    <section class="panel ${picking?'editing':''}" aria-labelledby="wk">
+      <div class="row" style="justify-content:space-between">
+        <div><h3 id="wk">ウィークリータスク</h3><span class="small muted mono">${fmtMD(key)}（月）〜${fmtMD(days[6])}（日）</span>
+          <div class="seg" role="group" aria-label="週"><button data-wv="cur" aria-pressed="${wkView==='cur'}">今週</button><button data-wv="next" aria-pressed="${wkView==='next'}">来週</button></div></div>
+        <button class="btn ${picking || !w.tasks.length ? 'primary' : 'ghost'}" id="wk-pick">${picking ? '決定して閉じる' : w.tasks.length ? 'タスクを変更する' : 'タスクを選ぶ'}</button>
+      </div>
+      <div class="wkstate ${picking ? 'edit' : w.tasks.length ? 'done' : 'none'}">${
+        picking ? `<b>選んでいる途中</b><span>下のリストで「追加」を押して選びます（${w.tasks.length}/${weekMax()}）。終わったら「決定して閉じる」。</span>`
+        : w.tasks.length ? `<b>✓ 決定済み（${w.tasks.length}つ）</b><span>このタスクで${wkView==='next'?'来週':'今週'}を進めます。変えたいときは「タスクを変更する」。</span>`
+        : `<b>まだ決めていません</b><span>「タスクを選ぶ」から${weekMax()}つまで選べます。まずは1つで十分です。</span>`}</div>
+      <p class="hint">「もし〜なら」でやるタイミングを決めます。毎日の○△×は「今日」タブでつけます。</p>
+      ${w.tasks.length ? w.tasks.map(t => {
+        const cnt = v => days.filter(dd => t.marks[dd]===v).length;
+        return `<div class="wtask">
+          <div class="hhead"><span class="name">${esc(t.name)}</span><span class="streak">○${cnt('o')} △${cnt('t')} ×${cnt('x')}</span></div>
+          <label class="whenrow"><span>もし</span><input type="text" data-when="${t.id}" placeholder="例：昼休みに外へ出たら" value="${esc(t.when)}"></label>
+          <div class="week">${days.map(dd => { const dt = new Date(dd+'T12:00'), m = t.marks[dd]||''; return `<span class="cell mk ro ${m} ${dd===TODAY?'today':''}" role="img" aria-label="${dt.getMonth()+1}月${dt.getDate()}日 ${esc(t.name)} ${MARK_LABEL[m]||'未記入'}"><span class="w">${dd===TODAY?'今日':WD[dt.getDay()]}</span><span class="n">${MARK[m]||dt.getDate()}</span></span>`; }).join('')}</div>
+          <div class="row" style="justify-content:flex-end"><button class="linkbtn" data-wdel="${t.id}">${pendingDelete===t.id?'もう一度押すと外す':'ウィークリータスクから外す'}</button></div>
+        </div>`; }).join('')
+      : `<div class="empty"><p>迷ったら「知識」タブの★印の項目から選ぶのがおすすめです。</p>
+          ${prev && prev.tasks.length ? `<button class="btn" id="wk-carry">${wkView==='next'?'今週':'先週'}のタスクを引き継ぐ（${prev.tasks.length}つ）</button>` : ''}</div>`}
+    </section>
+    ${picking ? pickerPanel(w) : ''}`;
+}
+function pickerPanel(w){
+  const chosen = new Set(w.tasks.map(t => t.cid).filter(Boolean)), stars = catStars();
+  return `<section class="panel" aria-labelledby="pk">
+    <div class="row" style="justify-content:space-between"><h3 id="pk">リストから選ぶ</h3><span class="small muted mono">選択中 ${w.tasks.length}/${weekMax()}</span></div>
+    <p class="hint">★は紙のリストで印をつけていた項目です。☆を押すと印を付け替えられます。</p>
+    ${CATALOG.map(c => `<details class="catg" ${c.items.some(([id]) => stars.includes(id)) ? 'open' : ''}>
+      <summary>${c.cat}<span class="mono muted">${c.items.length}</span></summary>
+      ${c.items.map(([id,name]) => `<div class="pick">
+        <button class="star" data-cstar="${id}" aria-pressed="${stars.includes(id)}" aria-label="印">${stars.includes(id)?'★':'☆'}</button>
+        <span class="name">${esc(name)}</span>
+        <button class="chip sm" data-add="${id}" aria-pressed="${chosen.has(id)}">${chosen.has(id)?'追加済み':'追加'}</button>
+      </div>`).join('')}
+    </details>`).join('')}
+    <form class="row" id="wk-custom" style="flex-wrap:nowrap">
+      <input type="text" id="wk-new" placeholder="自分でタスクを作る（例：階段を使う）" maxlength="40">
+      <button class="btn" style="flex:none">追加</button>
+    </form>
+    <button class="btn primary" id="wk-done">決定して閉じる（${w.tasks.length}つ）</button>
+  </section>`;
+}
+function bindWeekly(rerender){
+  const w = viewWeek(), find = id => w.tasks.find(t => t.id === id);
+  view.querySelectorAll('[data-wv]').forEach(b => b.onclick = () => { wkView = b.dataset.wv; pendingDelete = null; rerender(); });
+  const pk = document.getElementById('wk-pick'); if (pk) pk.onclick = () => { picking = !picking; if (!picking) toast(w.tasks.length ? `ウィークリータスクを決定しました（${w.tasks.length}つ）` : 'リストを閉じました'); rerender(); };
+  const wd = document.getElementById('wk-done'); if (wd) wd.onclick = () => { picking = false; toast(w.tasks.length ? `ウィークリータスクを決定しました（${w.tasks.length}つ）` : 'リストを閉じました'); rerender(); window.scrollTo(0,0); };
+  const carry = document.getElementById('wk-carry');
+  if (carry) carry.onclick = () => {
+    const prev = S.weeks[ymd(addDays(new Date(viewKey()+'T12:00'), -7))];
+    w.tasks = prev.tasks.map(t => ({ id:'w'+Date.now()+Math.floor(Math.random()*1e4), cid:t.cid, name:t.name, when:t.when, marks:{} }));
+    save(); toast('タスクを引き継ぎました'); rerender();
+  };
+  view.querySelectorAll('[data-when]').forEach(i => i.onchange = () => { const t = find(i.dataset.when); if (t){ t.when = i.value.trim(); save(); toast('タイミングを保存しました'); } });
+  view.querySelectorAll('[data-wdel]').forEach(b => b.onclick = () => {
+    const id = b.dataset.wdel;
+    if (pendingDelete === id){ w.tasks = w.tasks.filter(t => t.id !== id); pendingDelete = null; save(); toast('ウィークリータスクから外しました'); }
+    else pendingDelete = id;
+    rerender();
+  });
+  view.querySelectorAll('[data-add]').forEach(b => b.onclick = () => {
+    const id = b.dataset.add;
+    if (w.tasks.some(t => t.cid === id)){ w.tasks = w.tasks.filter(t => t.cid !== id); save(); rerender(); return; }
+    if (addWeekTask(CAT_BY_ID[id].name, id)){ toast('ウィークリータスクに追加しました'); rerender(); }
+  });
+  view.querySelectorAll('[data-cstar]').forEach(b => b.onclick = () => {
+    const s = catStars(), id = b.dataset.cstar, i = s.indexOf(id);
+    if (i >= 0) s.splice(i,1); else s.push(id); save(); rerender();
+  });
+  const cf = document.getElementById('wk-custom');
+  if (cf) cf.onsubmit = e => { e.preventDefault(); const v = document.getElementById('wk-new').value.trim(); if (!v) return; if (addWeekTask(v)){ toast('ウィークリータスクに追加しました'); rerender(); } };
+}
+function todayWeeklyRows(){
+  const dt = trackDate(), w = weekFor(dt);
+  if (!w.tasks.length) return `<p class="muted small">ウィークリータスクは「習慣」タブで選べます。</p>`;
+  return w.tasks.map(t => { const m = t.marks[dt]||''; return `<div class="habit">
+      <span class="name">${esc(t.name)}${t.when?`<span class="wwhen">もし${esc(t.when)}</span>`:''}</span>
+      ${oxButtons('data-ox', t.id, m)}
+    </div>`; }).join('');
+}
+function bindTodayWeekly(){
+  const dt = trackDate(), w = weekFor(dt);
+  view.querySelectorAll('[data-ox]').forEach(b => b.onclick = () => { const t = w.tasks.find(x => x.id === b.dataset.ox); if (t){ setMark(t, dt, b.dataset.v); viewTonight(); } });
+}
+
+/* ---------- knowledge base ---------- */
+const KB = [
+  { key:'over', title:'多すぎるもの', verb:'減らす', lead:'昔の暮らしより増えすぎたもの。少しずつ減らします。', items:[
+    ['摂取カロリー','腹八分目を目安に。間食は量を決めて小皿に出す。','g8'],
+    ['精製穀物','白米・白いパンの一部を、玄米・雑穀・全粒粉に置きかえる。','g9'],
+    ['アルコール','飲まない日を週に何日か決める。飲む日は量を先に決める。','g14'],
+    ['オメガ6脂肪酸','揚げ物やコーン油・大豆油の多い加工品を減らす。','g15'],
+    ['塩分','汁物は具を多く汁を少なく。ラーメンのスープは残す。','g18'],
+    ['乳製品','とりすぎていないか、1日の量をざっくり把握する。','g17'],
+    ['飽和脂肪酸','バター・脂身の多い肉は量をひかえめに。','g16'],
+    ['満腹感','苦しくなる前に箸を置く。ご飯は少なめによそう。','g19'],
+    ['食事のバリエーション','選択肢が多いほど食べすぎやすい。定番メニューを決めておく。',null],
+    ['人口密度','人混みが続いた日は、静かな場所で過ごす時間をつくる。',null],
+    ['衛生設備','除菌のしすぎで、有益な菌まで減らさない。','g4'],
+    ['人生の価値観','大事なことを3つ程度にしぼると、迷いが減る。','v1'] ]},
+  { key:'under', title:'少なすぎるもの', verb:'増やす', lead:'昔の暮らしより減ってしまったもの。意識して増やします。', items:[
+    ['有酸素運動','息が少し上がるウォーキングを週2〜3回、12分以上。','m2'],
+    ['筋肉を使う運動','スクワットや階段など、大きな筋肉を使う動きを週2回。',null],
+    ['睡眠','7〜9時間を確保。起きる時間をそろえる。','s1'],
+    ['空腹感','食事の間隔をあけて、軽い空腹の時間をつくる。',null],
+    ['ビタミン','色の濃い野菜や果物を毎食ひとつ。',null],
+    ['ミネラル','海藻・ナッツ・豆類を取り入れる。',null],
+    ['食物繊維','野菜・きのこ・海藻・豆で1日20g以上を目安に。','g2'],
+    ['タンパク質','毎食、手のひら1枚分の肉・魚・卵・大豆を。',null],
+    ['オメガ3脂肪酸','魚を週に数回。亜麻仁油を少量かける。','g13'],
+    ['自然との触れ合い','公園や木のある場所へ。週2回、10分以上。','n4'],
+    ['有益なバクテリアとの接触','発酵食品をとる。土や自然にふれる。','g3'],
+    ['太陽光','朝のうちに6〜20分、外の光を浴びる。','n3'],
+    ['深い対人コミュニケーション','気を許せる人と、近況や本音を話す時間をつくる。','c3'],
+    ['他人への貢献','小さな親切や手伝いを1日1つ。',null] ]},
+  { key:'new', title:'新しすぎるもの', verb:'距離をとる', lead:'人類の歴史の中で、ごく最近現れたもの。付き合い方を決めます。', items:[
+    ['加工食品','原材料の表示が短いものを選ぶ。',null],
+    ['トランス脂肪酸','マーガリンやショートニングを使った菓子・パンを減らす。','g7'],
+    ['果糖ブドウ糖液糖','清涼飲料水は水やお茶に置きかえる。','g10'],
+    ['公害','空気の悪い日は換気を工夫し、空気清浄機を使う。','g5'],
+    ['人工照明','夜は照明を暗く暖色に。寝室はできるだけ暗く。','s7'],
+    ['デジタルデバイス','スマホを手の届かない場所に置く時間をつくる。','m4'],
+    ['インターネット','見る時間帯を決める。寝る前は見ない。','m1'],
+    ['慢性的なストレス','原因を書き出し、減らせるものから手をつける。','m7'],
+    ['化学物質','香料の強い製品や洗剤の使いすぎを見直す。',null],
+    ['重金属','大型魚にかたよらず、いろいろな魚を食べる。',null],
+    ['処方箋','薬について気になることは医師・薬剤師に相談する（自己判断でやめない）。',null],
+    ['抗生物質','必要なときに、指示どおりに使う。','g6'],
+    ['孤独','人と話す予定を週に1つ入れる。','c5'],
+    ['仕事のプレッシャー','締め切りを細かく区切り、終業後は仕事から離れる時間をつくる。',null] ]}
+];
+const DEFAULT_KB_STARS = ['アルコール','満腹感','食事のバリエーション','有酸素運動','筋肉を使う運動','空腹感','食物繊維','太陽光','深い対人コミュニケーション','他人への貢献','慢性的なストレス','孤独','仕事のプレッシャー'];
+let kbFilter = 'all', kbQ = '';
+function kbStars(){ if (!S.kbStars) S.kbStars = DEFAULT_KB_STARS.slice(); return S.kbStars; }
+function viewKnow(){
+  const stars = kbStars();
+  const match = (g, [name, tip]) => (kbFilter === 'all' || kbFilter === g.key || (kbFilter === 'star' && stars.includes(name))) && (!kbQ || (name + tip).includes(kbQ));
+  const groups = KB.map(g => ({ g, items: g.items.filter(it => match(g, it)) })).filter(x => x.items.length);
+  const chosen = new Set(curWeek().tasks.map(t => t.cid).filter(Boolean));
+  view.innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div><h2>体調のナレッジ</h2><p class="muted small">昔の暮らしと比べて「多すぎる」「少なすぎる」「新しすぎる」ものを整える、という考え方のメモです。</p></div>
+    <input type="search" id="kq" placeholder="キーワードで探す（例：睡眠、魚）" value="${esc(kbQ)}">
+    <div class="row" role="group" aria-label="絞り込み">
+      ${[['all','すべて'],['star','★印'],['over','減らす'],['under','増やす'],['new','距離をとる']].map(([k,l]) => `<button class="chip sm" data-kf="${k}" aria-pressed="${kbFilter===k}">${l}</button>`).join('')}
+    </div>
+    ${groups.length ? groups.map(({g, items}) => `
+      <section class="panel kb-${g.key}" style="gap:0">
+        <div class="kbhead"><h3>${g.title}<span class="kbverb">${g.verb}</span></h3><p class="hint">${g.lead}</p></div>
+        ${items.map(([name, tip, cid]) => `<div class="kbitem">
+          <button class="star" data-kstar="${esc(name)}" aria-pressed="${stars.includes(name)}" aria-label="印">${stars.includes(name)?'★':'☆'}</button>
+          <div class="kbtext"><b>${esc(name)}</b><span>${esc(tip)}</span></div>
+          ${cid ? `<button class="chip sm" data-kadd="${cid}" aria-pressed="${chosen.has(cid)}">${chosen.has(cid)?'追加済み':'ウィークリー<br>タスクに'}</button>` : `<button class="chip sm" data-kcustom="${esc(name)}" data-verb="${g.verb}">ウィークリー<br>タスクに</button>`}
+        </div>`).join('')}
+      </section>`).join('') : '<p class="muted small">見つかりませんでした。別の言葉で探してみてください。</p>'}
+    <p class="small muted">一般的な健康情報のメモです。持病や服薬がある場合は、医師に相談してください。</p>
+  </div>`;
+  document.getElementById('kq').oninput = e => { kbQ = e.target.value.trim(); const pos = e.target.selectionStart; viewKnow(); const n = document.getElementById('kq'); n.focus(); n.setSelectionRange(pos,pos); };
+  view.querySelectorAll('[data-kf]').forEach(b => b.onclick = () => { kbFilter = b.dataset.kf; viewKnow(); });
+  view.querySelectorAll('[data-kstar]').forEach(b => b.onclick = () => { const s = kbStars(), n = b.dataset.kstar, i = s.indexOf(n); if (i >= 0) s.splice(i,1); else s.push(n); save(); viewKnow(); });
+  view.querySelectorAll('[data-kadd]').forEach(b => b.onclick = () => { const id = b.dataset.kadd; if (chosen.has(id)){ toast('ウィークリータスクに入っています'); return; } if (addWeekTask(CAT_BY_ID[id].name, id, curWeek())){ toast('ウィークリータスクに追加しました'); viewKnow(); } });
+  view.querySelectorAll('[data-kcustom]').forEach(b => b.onclick = () => { if (addWeekTask(`${b.dataset.kcustom}を${b.dataset.verb === '距離をとる' ? '減らす' : b.dataset.verb}`, null, curWeek())){ toast('ウィークリータスクに追加しました'); viewKnow(); } });
 }
 
 /* ---------- learnings ---------- */
@@ -582,7 +1252,7 @@ function viewLearn(){
     </form>
     <input type="search" id="ql" placeholder="学びを検索" value="${esc(q)}">
     <section class="panel" style="gap:0">${list.map(l=>`
-      <div class="learn"><span class="d">${l.date.replace(/-/g,'.')}</span><span>${esc(l.text)}</span>${l.en?`<span class="en-line">${esc(l.en)}</span>`:''}</div>`).join('') || '<p class="muted small">まだ学びがありません。今夜のふりかえりで1つ書いてみましょう。</p>'}</section>
+      <div class="learn"><span class="d">${l.date.replace(/-/g,'.')}</span><span>${l.kind==='fail'?'<span class="ftag">失敗から</span>':''}${esc(l.text)}</span>${l.en?`<span class="en-line">${esc(l.en)}</span>`:''}</div>`).join('') || '<p class="muted small">まだ学びがありません。「今日」タブで1つ書いてみましょう。</p>'}</section>
   </div>`;
   document.getElementById('ql').oninput = e => { q = e.target.value; const pos = e.target.selectionStart; viewLearn(); const n = document.getElementById('ql'); n.focus(); n.setSelectionRange(pos,pos); };
   document.getElementById('addl').onsubmit = e => {
@@ -613,6 +1283,9 @@ function viewLife(){
     cells += `<i class="l${level(peek(key))}${key===TODAY?' today':''}" title="${key}"></i>`;
   }
   // mood sparkline 30 days
+  const fc = {}; let goodCount = 0;
+  for (let i = 0; i < 30; i++){ const dd = peek(ymd(addDays(now,-i))); if (!dd) continue; (dd.feels||[]).forEach(f => fc[f] = (fc[f]||0) + 1); goodCount += goodsOf(dd).filter(Boolean).length; }
+  const feelTop = Object.entries(fc).sort((a,b) => b[1]-a[1]).slice(0, 8);
   const W = 300, H = 90, L = 22, pts = [];
   for (let i = 29; i >= 0; i--){ const d = peek(ymd(addDays(now,-i))); if (d && d.mood) pts.push([L + (29-i)*(W-L-6)/29, 8 + (5-d.mood)*(H-22)/4]); }
   const path = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
@@ -621,18 +1294,20 @@ function viewLife(){
 
   view.innerHTML = `
   <div style="display:flex;flex-direction:column;gap:16px">
-    <div><h2>人生のログ</h2><p class="muted small">続けた夜が、そのまま地図になります。</p></div>
+    <div><h2>人生のログ</h2><p class="muted small">続けた日々が、そのまま地図になります。</p></div>
     <div class="stats">
-      <div class="stat"><div class="v">${streak}<small>夜</small></div><div class="k">いまの連続</div></div>
-      <div class="stat"><div class="v">${nights}<small>夜</small></div><div class="k">続けた夜の合計</div></div>
+      <div class="stat"><div class="v">${streak}<small>日</small></div><div class="k">いまの連続</div></div>
+      <div class="stat"><div class="v">${nights}<small>日</small></div><div class="k">続けた日の合計</div></div>
       <div class="stat"><div class="v">${(medMin/60).toFixed(1)}<small>時間</small></div><div class="k">瞑想した時間</div></div>
       <div class="stat"><div class="v">${S.learns.length}<small>件</small></div><div class="k">積み上げた学び</div></div>
     </div>
     <section class="panel">
-      <div class="row" style="justify-content:space-between"><h3>直近12週</h3><span class="small muted">瞑想・ふりかえり・習慣</span></div>
+      <div class="row" style="justify-content:space-between"><h3>直近12週</h3><span class="small muted">瞑想・ジャーナリング・習慣</span></div>
       <div class="heat-wrap"><div class="heat">${cells}</div></div>
       <div class="legend">少<i style="background:var(--heat0)"></i><i style="background:color-mix(in srgb,var(--accent) 30%,var(--heat0))"></i><i style="background:color-mix(in srgb,var(--accent) 62%,var(--heat0))"></i><i style="background:var(--accent)"></i>多</div>
     </section>
+    ${wanderYearPanel()}
+    ${medStatsPanel()}
     <section class="panel">
       <div class="row" style="justify-content:space-between"><h3>調子の波（30日）</h3><span class="small muted">5 = いい日</span></div>
       ${pts.length > 1 ? `<svg class="spark" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="直近30日の調子の推移">
@@ -641,10 +1316,12 @@ function viewLife(){
         <path d="${path}" fill="none" stroke="var(--moon)" stroke-width="1.8" stroke-linejoin="round"/>
         <circle cx="${last[0]}" cy="${last[1]}" r="3.5" fill="var(--accent)"/>
         <text x="${L}" y="${H-2}">30日前</text><text x="${W-18}" y="${H-2}">今日</text>
-      </svg>` : '<p class="muted small">ふりかえりで調子を記録すると、ここに波が描かれます。</p>'}
+      </svg>` : '<p class="muted small">ジャーナリングで調子を選ぶと、ここに波が描かれます。</p>'}
     </section>
     <section class="panel">
       <h3>設定</h3>
+      <div class="setrow"><label for="simple-on">シンプルモード</label><input type="checkbox" id="simple-on" switch ${isSimple()?'checked':''}></div>
+      <p class="small muted">オンにすると、「今日」タブは毎日やることだけになります。呼吸の設定は前回のまま使い（「変える」で開けます）、アドバイスは土日だけ、説明文は最小限、ウィークリータスクは2つまでになります。</p>
       <div class="setrow">
         <label for="reset-hour">1日の切り替え時刻</label>
         <select id="reset-hour">${[0,1,2,3,4,5,6].map(h=>`<option value="${h}" ${RESET===h?'selected':''}>${h}:00</option>`).join('')}</select>
@@ -654,35 +1331,17 @@ function viewLife(){
         <label for="ios-timer">iPhoneのタイマーと連動</label>
         <input type="checkbox" id="ios-timer" switch ${S.settings.iosTimer?'checked':''}>
       </div>
-      <p class="small muted">オンにすると、瞑想の開始時にショートカット「夜のノート瞑想」を呼び出します。iPhone標準のタイマーで鳴らすので、画面がロックされていても終了時に音と振動で知らせます。</p>
+      <p class="small muted">オンにすると、瞑想の「開始」を押したときにショートカット「夜のノート瞑想」を呼び出します（ListTimerを開くなど、中身はショートカットアプリで決めます）。</p>
+      <div class="setrow"><span>画面の色</span><button class="btn ghost" id="theme">${themeLabel()}</button></div>
     </section>
-    <section class="panel">
-      <h3>データ</h3>
-      <p class="small muted">記録はこの端末のブラウザだけに保存されます。機種変更の前にコピーして保管してください。</p>
-      <div class="row"><button class="btn" id="copy">記録をコピー</button><button class="btn" id="imp">記録を読み込む</button><button class="btn ghost" id="theme">表示：${themeLabel()}</button></div>
-      <textarea id="dump" hidden readonly></textarea>
-      <div id="impbox" hidden style="display:flex;flex-direction:column;gap:8px">
-        <textarea id="imptext" placeholder="コピーした記録をここに貼り付け"></textarea>
-        <button class="btn primary" id="impgo">この記録で置き換える</button>
-      </div>
-    </section>
+    ${dataPanel()}
   </div>`;
-  document.getElementById('copy').onclick = async () => {
-    const txt = JSON.stringify(S);
-    try { await navigator.clipboard.writeText(txt); toast('記録をコピーしました'); }
-    catch(e){ const t = document.getElementById('dump'); t.hidden = false; t.value = txt; t.select(); toast('下の欄から手動でコピーしてください'); }
-  };
-  document.getElementById('imp').onclick = () => { const b = document.getElementById('impbox'); b.hidden = !b.hidden; };
-  document.getElementById('impgo').onclick = () => {
-    try {
-      const d = JSON.parse(document.getElementById('imptext').value);
-      if (!d || !Array.isArray(d.habits) || typeof d.days !== 'object' || !Array.isArray(d.learns)) throw 0;
-      S = d; S.settings = Object.assign({ resetHour:2, iosTimer:false }, S.settings); RESET = S.settings.resetHour; refreshDay(); save(); header(); toast('記録を読み込みました'); viewLife();
-    } catch(e){ toast('読み込めませんでした。「記録をコピー」した文字をそのまま貼ってください'); }
-  };
+  view.querySelectorAll('[data-wy]').forEach(b => b.onclick = () => { wyMode = b.dataset.wy; viewLife(); });
+  bindData();
   document.getElementById('reset-hour').onchange = e => {
     S.settings.resetHour = RESET = +e.target.value; save(); refreshDay(); header(); toast(`切り替え時刻を${RESET}:00にしました`);
   };
+  document.getElementById('simple-on').onchange = e => { S.settings.simple = e.target.checked; bsetOpen = false; save(); toast(e.target.checked ? 'シンプルモードにしました' : 'すべての機能を表示します'); viewLife(); };
   document.getElementById('ios-timer').onchange = e => { S.settings.iosTimer = e.target.checked; save(); };
   document.getElementById('theme').onclick = () => {
     const cur = document.documentElement.dataset.theme;
@@ -692,13 +1351,190 @@ function viewLife(){
     viewLife();
   };
 }
+function dayWander(d){ if (!d) return null; const ss = d.sessions || []; if (!ss.length && d.wanderExtra == null) return null; return ss.reduce((a,x) => a + x.wander, 0) + (d.wanderExtra || 0); }
+function dayMedMin(d){ return d ? (d.sessions || []).reduce((a,x) => a + x.min, 0) : 0; }
+function adjustDayWander(date, dv){
+  const d = day(date), ss = d.sessions || [];
+  if (dv > 0) d.wanderExtra = (d.wanderExtra || 0) + 1;
+  else if (d.wanderExtra > 0) d.wanderExtra--;
+  else { const last = [...ss].reverse().find(x => x.wander > 0); if (last) last.wander--; else if (!ss.length) d.wanderExtra = 0; }
+  save();
+}
+function wanderRow(){
+  const v = dayWander(peek(trackDate()));
+  const week = [...Array(7)].map((_,i) => dayWander(peek(ymd(addDays(base(), -i-1))))).filter(x => x != null);
+  const avg = week.length ? (week.reduce((a,x) => a + x, 0) / week.length).toFixed(1) : '−';
+  return `<div class="habit wrow">
+    <span class="name">戻りの回数<span class="wwhen">直近7日の平均 ${avg}回</span></span>
+    <span class="wedit big"><button data-dw="-1" aria-label="1回減らす">−</button><b class="mono">${v == null ? '−' : v}</b><button data-dw="1" aria-label="1回増やす">＋</button></span>
+  </div>`;
+}
+let wyMode = 'count';
+function wanderYearPanel(){
+  const end = weekStart(base()), weeks = [];
+  for (let i = 51; i >= 0; i--){
+    const ws = addDays(end, -7*i); let sum = 0, days = 0, min = 0;
+    for (let j = 0; j < 7; j++){ const d = peek(ymd(addDays(ws, j))), v = dayWander(d); if (v != null){ sum += v; days++; min += dayMedMin(d); } }
+    weeks.push({ ws, v: days ? (wyMode === 'count' ? sum / days : (min ? sum / min * 10 : null)) : null });
+  }
+  const has = weeks.filter(w => w.v != null);
+  const head = `<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h3>戻りの回数（1年）</h3><span class="small muted">週ごとの平均</span></div>
+    <div class="seg" role="group" aria-label="単位"><button data-wy="count" aria-pressed="${wyMode==='count'}">1日あたり</button><button data-wy="rate" aria-pressed="${wyMode==='rate'}">10分あたり</button></div></div>`;
+  if (!has.length) return `<section class="panel">${head}<p class="muted small">瞑想で戻りの回数を記録すると、ここに1年分の変化が週ごとに並びます。</p></section>`;
+  const W = 320, H = 130, L = 26, B = 20, T = 10, bw = (W - L - 4) / 52;
+  const top = Math.max(4, Math.ceil(Math.max(...has.map(w => w.v)) / 2) * 2);
+  const Y = v => T + (1 - v / top) * (H - T - B);
+  const bars = weeks.map((w,i) => w.v == null ? '' : `<rect x="${(L + i*bw + 1).toFixed(1)}" y="${Y(w.v).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${(H - B - Y(w.v)).toFixed(1)}" rx="1.5" fill="${i === 51 ? 'var(--accent)' : 'var(--moon)'}"><title>${ymd(w.ws).slice(5).replace('-','/')}の週 ${w.v.toFixed(1)}</title></rect>`).join('');
+  const ticks = [0, top/2, top].map(v => `<text x="0" y="${Y(v)+3}">${v}</text><line x1="${L}" x2="${W}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-dasharray="2 3"/>`).join('');
+  let months = '', lastM = weeks[0].ws.getMonth(), lastX = -99;
+  weeks.forEach((w,i) => { const m = w.ws.getMonth(), x = L + i*bw; if (m !== lastM){ lastM = m; if (x - lastX >= 40 && i < 50){ months += `<text x="${x.toFixed(1)}" y="${H-4}">${m+1}月</text>`; lastX = x; } } });
+  const avg = a => { const x = a.filter(w => w.v != null); return x.length ? x.reduce((s,w) => s + w.v, 0) / x.length : null; };
+  const f = v => v == null ? '−' : v.toFixed(1);
+  const r4 = avg(weeks.slice(-4)), p4 = avg(weeks.slice(-8,-4)), y = avg(weeks);
+  const firstLog = has[0];
+  return `<section class="panel">${head}
+    <svg class="spark" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="過去52週の戻りの回数の推移">${ticks}${bars}${months}</svg>
+    <div class="stats3"><div><span class="k">直近4週</span><b class="mono">${f(r4)}</b></div><div><span class="k">その前の4週</span><b class="mono">${f(p4)}</b></div><div><span class="k">1年の平均</span><b class="mono">${f(y)}</b></div></div>
+    <p class="hint">${ymd(firstLog.ws).replace(/-/g,'/')}の週から記録があります。週ごとの上下より、数か月単位の流れを見てください。</p>
+  </section>`;
+}
+function wanderTrend(all){
+  const pts = all.slice(-20);
+  if (pts.length < 2) return '';
+  const W = 300, H = 110, L = 26, B = 18, T = 8;
+  const vals = pts.map(x => x.wander), max = Math.max(4, ...vals);
+  const top = Math.ceil(max / 2) * 2;
+  const X = i => L + i * (W - L - 8) / (pts.length - 1), Y = v => T + (1 - v / top) * (H - T - B);
+  const path = vals.map((v,i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' ');
+  const ticks = [0, top/2, top].map(v => `<text x="0" y="${Y(v)+3}">${v}</text><line x1="${L}" x2="${W}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-dasharray="2 3"/>`).join('');
+  const avg = a => a.length ? a.reduce((s,x) => s + x, 0) / a.length : 0;
+  const half = Math.floor(vals.length / 2), first = avg(vals.slice(0, half)), last = avg(vals.slice(half));
+  return `<div><div class="row" style="justify-content:space-between"><span class="small" style="font-weight:500">戻りの回数（最近${pts.length}回）</span><span class="small muted">前半 ${first.toFixed(1)} → 後半 ${last.toFixed(1)}</span></div>
+    <svg class="spark" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="瞑想ごとの戻りの回数の推移">
+      ${ticks}
+      <path d="${path}" fill="none" stroke="var(--moon)" stroke-width="1.8" stroke-linejoin="round"/>
+      ${vals.map((v,i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="${i === vals.length-1 ? 3.5 : 2.2}" fill="${i === vals.length-1 ? 'var(--accent)' : 'var(--moon)'}"/>`).join('')}
+      <text x="${L}" y="${H-2}">${pts[0].date.slice(5).replace('-','/')}</text><text x="${W-30}" y="${H-2}">${pts[pts.length-1].date.slice(5).replace('-','/')}</text>
+    </svg></div>`;
+}
+function medStatsPanel(){
+  const all = [];
+  Object.keys(S.days).sort().forEach(k => (S.days[k].sessions || []).forEach(x => all.push({ ...x, date:k })));
+  if (!all.length) return `<section class="panel"><h3>瞑想のバリエーション</h3><p class="muted small">「今日」タブで呼吸のリズムや時間帯を変えて瞑想すると、ここで比べられます。</p></section>`;
+  const per10 = arr => { const m = arr.reduce((a,x) => a + x.min, 0); return m ? (arr.reduce((a,x) => a + x.wander, 0) / m * 10) : 0; };
+  const group = keyFn => { const g = {}; all.forEach(x => (g[keyFn(x)] = g[keyFn(x)] || []).push(x)); return Object.entries(g).sort((a,b) => b[1].length - a[1].length); };
+  const lab = Object.fromEntries(SLOTS);
+  const table = (title, rows, labFn) => `<div class="mtab"><div class="mrow mh"><span>${title}</span><span>回数</span><span>合計</span><span>戻り/10分</span></div>
+    ${rows.map(([k, arr]) => `<div class="mrow"><span>${labFn(k)}</span><span class="mono">${arr.length}</span><span class="mono">${arr.reduce((a,x)=>a+x.min,0)}分</span><span class="mono">${per10(arr).toFixed(1)}</span></div>`).join('')}</div>`;
+  const recent = all.slice(-5).reverse();
+  return `<section class="panel">
+    <div class="row" style="justify-content:space-between"><h3>瞑想のバリエーション</h3><span class="small muted">全${all.length}回</span></div>
+    ${wanderTrend(all)}
+    ${table('呼吸（吸-止-吐）', group(x => patLabel(x.pat)), k => k)}
+    ${table('時間帯', group(x => x.slot), k => lab[k] || k)}
+    <div class="sesslist"><span class="eyebrow">最近の5回</span>${recent.map(x => `<div class="sess"><span class="mono">${x.date.slice(5).replace('-','/')}</span><span>${lab[x.slot]||''}</span><span class="mono">${x.min}分</span><span class="mono">${patLabel(x.pat)}</span><span>戻り <b class="mono">${x.wander}</b></span></div>`).join('')}</div>
+    <p class="hint">戻りの回数は、考えごとに気づいて呼吸に戻れた回数です。少ないほど良いとは限らないので、同じ条件で続けたときの変化を見ます。</p>
+  </section>`;
+}
+/* ---------- data handover ---------- */
+const APP_ID = 'hibi-note';
+function dataSummary(d){
+  const days = Object.values(d.days || {});
+  const used = Object.keys(d.days || {}).filter(k => { const x = d.days[k]; return x && (x.journal || x.med || (x.habits||[]).length || (x.sessions||[]).length); }).sort();
+  return {
+    days: used.length, from: used[0] || null, to: used[used.length-1] || null,
+    learns: (d.learns || []).length,
+    sessions: days.reduce((a,x) => a + ((x && x.sessions) || []).length, 0),
+    weeks: Object.values(d.weeks || {}).filter(w => w.tasks && w.tasks.length).length,
+    habits: (d.habits || []).length
+  };
+}
+const fmtDate = k => k ? k.replace(/-/g,'/') : '−';
+function summaryList(sm){
+  return `<ul class="dsum"><li><span>期間</span><b class="mono">${fmtDate(sm.from)} 〜 ${fmtDate(sm.to)}</b></li><li><span>記録した日</span><b class="mono">${sm.days}日</b></li><li><span>学び</span><b class="mono">${sm.learns}件</b></li><li><span>瞑想</span><b class="mono">${sm.sessions}回</b></li><li><span>週タスク</span><b class="mono">${sm.weeks}週分</b></li></ul>`;
+}
+function backupText(){ return JSON.stringify({ app: APP_ID, version: 1, exportedAt: new Date().toISOString(), data: S }); }
+function backupName(){ return `hibi-note-${ymd(new Date())}.json`; }
+function markBackedUp(){ S.lastBackup = Date.now(); save(); }
+let pendingImport = null;
+function dataPanel(){
+  const sm = dataSummary(S), lb = S.lastBackup ? new Date(S.lastBackup) : null;
+  const ago = lb ? Math.floor((Date.now() - lb) / 864e5) : null;
+  const status = !lb ? 'まだバックアップがありません' : ago === 0 ? '今日バックアップ済み' : `${ago}日前にバックアップ`;
+  return `<section class="panel" aria-labelledby="dh">
+    <h3 id="dh">データの引き継ぎ</h3>
+    <div class="dnote"><b>アプリを更新しても、記録は消えません。</b><span>GitHubでファイルを差し替えても、記録はこのiPhoneの中にそのまま残ります。</span></div>
+    <p class="hint">ただし次のときは記録が消えるので、先にバックアップを作ってください：機種変更／ホーム画面のアイコンを削除して追加し直す／Safariの履歴とWebサイトデータを消去する。</p>
+    <div class="dstatus ${!lb || ago > 14 ? 'warn' : ''}"><span>いまの記録</span><b>${status}</b></div>
+    ${summaryList(sm)}
+
+    <div class="dstep"><span class="qn">1</span><div><h3>バックアップを作る</h3><p class="hint">「ファイルに保存」で、iPhoneの「ファイル」アプリやiCloud Driveに保存できます。うまくいかないときは「コピー」して、メモアプリなどに貼っておきます。</p></div></div>
+    <div class="row"><button class="btn primary" id="bk-file">ファイルに保存</button><button class="btn" id="bk-copy">コピー</button></div>
+    <textarea id="dump" hidden readonly></textarea>
+
+    <div class="dstep"><span class="qn">2</span><div><h3>バックアップから戻す</h3><p class="hint">新しいiPhoneや追加し直したアプリで使います。いまの記録は、バックアップの内容に置き換わります。</p></div></div>
+    <div class="row"><label class="btn" for="rs-file" style="cursor:pointer">ファイルを選ぶ</label><input type="file" id="rs-file" accept="application/json,.json,.txt" class="vh"><button class="btn" id="rs-paste">貼り付けて戻す</button></div>
+    <div id="rs-pastebox" hidden class="dcol"><textarea id="rs-text" placeholder="コピーしたバックアップをここに貼り付け"></textarea><button class="btn" id="rs-check">内容を確認する</button></div>
+    <div id="rs-confirm"></div>
+  </section>`;
+}
+function parseBackup(text){
+  const j = JSON.parse(text);
+  const d = j && j.app === APP_ID && j.data ? j.data : j;
+  if (!d || !Array.isArray(d.habits) || typeof d.days !== 'object' || !Array.isArray(d.learns)) throw new Error('format');
+  return { data: d, exportedAt: j && j.exportedAt };
+}
+function showImportConfirm(text){
+  const box = document.getElementById('rs-confirm');
+  try {
+    const b = parseBackup(text); pendingImport = b.data;
+    box.innerHTML = `<div class="dconfirm"><b>このバックアップで置き換えますか？</b>
+      ${b.exportedAt ? `<span class="small muted">作成日時：${new Date(b.exportedAt).toLocaleString('ja-JP')}</span>` : ''}
+      ${summaryList(dataSummary(b.data))}
+      <div class="row"><button class="btn primary" id="rs-go">置き換える</button><button class="btn ghost" id="rs-cancel">やめる</button></div></div>`;
+    document.getElementById('rs-go').onclick = () => {
+      S = pendingImport; pendingImport = null;
+      S.settings = Object.assign({ resetHour:2, iosTimer:false, simple:true }, S.settings); RESET = S.settings.resetHour; S.sample = false;
+      refreshDay(); save(); header(); toast('バックアップから戻しました'); viewLife();
+    };
+    document.getElementById('rs-cancel').onclick = () => { pendingImport = null; box.innerHTML = ''; };
+  } catch(e){
+    pendingImport = null;
+    box.innerHTML = `<p class="dconfirm small">このファイルは読み込めませんでした。「ファイルに保存」か「コピー」で作ったバックアップを選んでください。</p>`;
+  }
+}
+function bindData(){
+  document.getElementById('bk-file').onclick = async () => {
+    const text = backupText(), name = backupName();
+    try {
+      const file = new File([text], name, { type:'application/json' });
+      if (navigator.canShare && navigator.canShare({ files:[file] })){ await navigator.share({ files:[file], title:name }); markBackedUp(); toast('バックアップを保存しました'); viewLife(); return; }
+    } catch(e){ if (e && e.name === 'AbortError') return; }
+    try {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type:'application/json' })); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      markBackedUp(); toast('バックアップをダウンロードしました'); viewLife();
+    } catch(e){ toast('保存できませんでした。「コピー」を使ってください'); }
+  };
+  document.getElementById('bk-copy').onclick = async () => {
+    const text = backupText();
+    try { await navigator.clipboard.writeText(text); markBackedUp(); toast('バックアップをコピーしました。メモなどに貼っておきます'); viewLife(); }
+    catch(e){ const t = document.getElementById('dump'); t.hidden = false; t.value = text; t.select(); markBackedUp(); toast('下の欄を長押しでコピーしてください'); }
+  };
+  document.getElementById('rs-file').onchange = e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    const r = new FileReader(); r.onload = () => showImportConfirm(String(r.result)); r.readAsText(f);
+  };
+  document.getElementById('rs-paste').onclick = () => { const b = document.getElementById('rs-pastebox'); b.hidden = !b.hidden; };
+  document.getElementById('rs-check').onclick = () => showImportConfirm(document.getElementById('rs-text').value);
+}
 function themeLabel(){ const t = document.documentElement.dataset.theme; return t==='dark'?'夜':t==='light'?'昼':'自動'; }
 
 /* ---------- router ---------- */
 let current = 'tonight';
-const VIEWS = { tonight:viewTonight, habits:viewHabits, learn:viewLearn, life:viewLife };
+const VIEWS = { tonight:viewTonight, habits:viewHabits, learn:viewLearn, know:viewKnow, life:viewLife };
 function go(tab){
-  current = tab; pendingDelete = null; pendingMove = false;
+  current = tab; pendingDelete = null; pendingMove = false; if (tab !== 'habits'){ picking = false; wkView = 'cur'; }
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-current', t.dataset.tab===tab ? 'page' : 'false'));
   VIEWS[tab](); window.scrollTo(0,0);
 }
