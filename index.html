@@ -249,6 +249,8 @@ button:disabled{opacity:.45;cursor:default}
 .simple .opt{display:none}
 .bsum{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.84rem;color:var(--muted);padding:8px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
 .bsum b{color:var(--fg);font-weight:500}
+.setblock{display:flex;flex-direction:column;gap:8px;padding-block:6px}
+.setblock > span{font-size:.9rem}
 .sesslist{display:flex;flex-direction:column;gap:4px}
 .sess{display:grid;grid-template-columns:3.2em 1.6em 3em 4em 1fr;gap:6px;font-size:.82rem;color:var(--muted);padding-block:4px;border-top:1px solid var(--line)}
 .sess b{color:var(--fg)}
@@ -1322,6 +1324,12 @@ function viewLife(){
       <h3>設定</h3>
       <div class="setrow"><label for="simple-on">シンプルモード</label><input type="checkbox" id="simple-on" switch ${isSimple()?'checked':''}></div>
       <p class="small muted">オンにすると、「今日」タブは毎日やることだけになります。呼吸の設定は前回のまま使い（「変える」で開けます）、アドバイスは土日だけ、説明文は最小限、ウィークリータスクは2つまでになります。</p>
+      <div class="setblock">
+        <span>呼吸の秒数（セルフコンパッション）</span>
+        <div class="steppers">${[['i','吸う'],['h','止める'],['e','吐く']].map(([k,l]) => `<div class="stp"><span>${l}</span><button data-sst="${k}" data-dv="-1" ${timer.running?'disabled':''} aria-label="${l}を1秒短く">−</button><b class="mono">${breath()[k]}<small>秒</small></b><button data-sst="${k}" data-dv="1" ${timer.running?'disabled':''} aria-label="${l}を1秒長く">＋</button></div>`).join('')}</div>
+        <div class="row" role="group" aria-label="呼吸パターン">${BREATH_PRESETS.map(p => { const b = breath(); return `<button class="chip sm" data-sbp="${p.i}-${p.h}-${p.e}" aria-pressed="${b.i===p.i&&b.h===p.h&&b.e===p.e}" ${timer.running?'disabled':''}>${p.name}<span class="mono"> ${p.i}-${p.h}-${p.e}</span></button>`; }).join('')}</div>
+        <p class="small muted">1サイクル ${breath().i + breath().h + breath().e}秒（1分あたり約${(60 / (breath().i + breath().h + breath().e)).toFixed(1)}回）。止めるを0秒にすると、止める段階を飛ばします。変えた秒数は次の瞑想から使われます。</p>
+      </div>
       <div class="setrow">
         <label for="reset-hour">1日の切り替え時刻</label>
         <select id="reset-hour">${[0,1,2,3,4,5,6].map(h=>`<option value="${h}" ${RESET===h?'selected':''}>${h}:00</option>`).join('')}</select>
@@ -1341,6 +1349,8 @@ function viewLife(){
   document.getElementById('reset-hour').onchange = e => {
     S.settings.resetHour = RESET = +e.target.value; save(); refreshDay(); header(); toast(`切り替え時刻を${RESET}:00にしました`);
   };
+  view.querySelectorAll('[data-sst]').forEach(b => b.onclick = () => { const br = breath(), k = b.dataset.sst, min = k === 'h' ? 0 : 2; br[k] = Math.max(min, Math.min(12, br[k] + (+b.dataset.dv))); save(); viewLife(); });
+  view.querySelectorAll('[data-sbp]').forEach(b => b.onclick = () => { const [i,h,e] = b.dataset.sbp.split('-').map(Number); S.settings.breath = {i,h,e}; save(); toast(`呼吸を ${i}-${h}-${e} にしました`); viewLife(); });
   document.getElementById('simple-on').onchange = e => { S.settings.simple = e.target.checked; bsetOpen = false; save(); toast(e.target.checked ? 'シンプルモードにしました' : 'すべての機能を表示します'); viewLife(); };
   document.getElementById('ios-timer').onchange = e => { S.settings.iosTimer = e.target.checked; save(); };
   document.getElementById('theme').onclick = () => {
