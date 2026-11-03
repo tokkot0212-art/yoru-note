@@ -249,6 +249,10 @@ button:disabled{opacity:.45;cursor:default}
 .simple .opt{display:none}
 .bsum{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.84rem;color:var(--muted);padding:8px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
 .bsum b{color:var(--fg);font-weight:500}
+.bcompact{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px}
+.bcompact label,.bpreset{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted)}
+.bcompact select,.bpreset select{width:100%;padding:7px 8px}
+.bpreset{margin-bottom:8px}
 .setblock{display:flex;flex-direction:column;gap:8px;padding-block:6px}
 .setblock > span{font-size:.9rem}
 .sesslist{display:flex;flex-direction:column;gap:4px}
@@ -596,7 +600,7 @@ function bindMantra(){
     mantras().push({ id:'m'+Date.now(), text:v, on:true, cat:mantraNewCat }); save(); mantraEdit = true; toast(`「${MANTRA_CATS.find(c => c.key === mantraNewCat).name}」に追加しました`); VIEWS[current]();
   };
 }
-let bsetOpen = false;
+let bsetOpen = false, bsetOpen2 = false;
 function breathSummary(){
   const b = breath(), p = BREATH_PRESETS.find(x => x.i===b.i && x.h===b.h && x.e===b.e);
   const slot = Object.fromEntries(SLOTS)[timer.running ? timer.slot : (medSlot || autoSlot())];
@@ -1322,12 +1326,18 @@ function viewLife(){
       <h3>設定</h3>
       <div class="setrow"><label for="simple-on">シンプルモード</label><input type="checkbox" id="simple-on" switch ${isSimple()?'checked':''}></div>
       <p class="small muted">オンにすると、「今日」タブは毎日やることだけになります。アドバイスは土日だけ、説明文は最小限、ウィークリータスクは2つまでになります。</p>
-      <div class="setblock">
-        <span>呼吸の秒数（セルフコンパッション）</span>
-        <div class="steppers">${[['i','吸う'],['h','止める'],['e','吐く']].map(([k,l]) => `<div class="stp"><span>${l}</span><button data-sst="${k}" data-dv="-1" ${timer.running?'disabled':''} aria-label="${l}を1秒短く">−</button><b class="mono">${breath()[k]}<small>秒</small></b><button data-sst="${k}" data-dv="1" ${timer.running?'disabled':''} aria-label="${l}を1秒長く">＋</button></div>`).join('')}</div>
-        <div class="row" role="group" aria-label="呼吸パターン">${BREATH_PRESETS.map(p => { const b = breath(); return `<button class="chip sm" data-sbp="${p.i}-${p.h}-${p.e}" aria-pressed="${b.i===p.i&&b.h===p.h&&b.e===p.e}" ${timer.running?'disabled':''}>${p.name}<span class="mono"> ${p.i}-${p.h}-${p.e}</span></button>`; }).join('')}</div>
-        <p class="small muted">1サイクル ${breath().i + breath().h + breath().e}秒（1分あたり約${(60 / (breath().i + breath().h + breath().e)).toFixed(1)}回）。止めるを0秒にすると、止める段階を飛ばします。変えた秒数は次の瞑想から使われます。</p>
-      </div>
+      ${(() => { const b = breath(), p = BREATH_PRESETS.find(x => x.i===b.i && x.h===b.h && x.e===b.e), lock = timer.running ? 'disabled' : '';
+        const opt = (k, min) => [...Array(13 - min)].map((_, j) => j + min).map(v => `<option value="${v}" ${b[k]===v?'selected':''}>${v}秒</option>`).join('');
+        return `<details class="mset" id="bset2">
+        <summary><span>呼吸の秒数</span><span class="small muted mono">${patLabel(b)}${p ? '（' + p.name + '）' : ''}</span></summary>
+        <div class="bcompact">
+          <label>吸う<select data-sel="i" ${lock}>${opt('i',2)}</select></label>
+          <label>止める<select data-sel="h" ${lock}>${opt('h',0)}</select></label>
+          <label>吐く<select data-sel="e" ${lock}>${opt('e',2)}</select></label>
+        </div>
+        <label class="bpreset">よく使う組み合わせ<select id="bpreset" ${lock}><option value="">選ぶ…</option>${BREATH_PRESETS.map(x => `<option value="${x.i}-${x.h}-${x.e}">${x.name}（${x.i}-${x.h}-${x.e}）</option>`).join('')}</select></label>
+        <p class="small muted">1サイクル ${b.i + b.h + b.e}秒・1分あたり約${(60 / (b.i + b.h + b.e)).toFixed(1)}回。止めるを0秒にすると飛ばします。</p>
+      </details>`; })()}
       ${mantraSettings()}
       <p class="small muted">瞑想中は、考えごとに気づいて呼吸に戻るたびに「呼吸に戻った」を押します。押し忘れた分は、終わったあと「今日」タブの一覧で直せます。時間帯（朝・昼・夜）は時刻から自動で記録します。</p>
       <div class="setrow">
@@ -1349,8 +1359,9 @@ function viewLife(){
   document.getElementById('reset-hour').onchange = e => {
     S.settings.resetHour = RESET = +e.target.value; save(); refreshDay(); header(); toast(`切り替え時刻を${RESET}:00にしました`);
   };
-  view.querySelectorAll('[data-sst]').forEach(b => b.onclick = () => { const br = breath(), k = b.dataset.sst, min = k === 'h' ? 0 : 2; br[k] = Math.max(min, Math.min(12, br[k] + (+b.dataset.dv))); save(); viewLife(); });
-  view.querySelectorAll('[data-sbp]').forEach(b => b.onclick = () => { const [i,h,e] = b.dataset.sbp.split('-').map(Number); S.settings.breath = {i,h,e}; save(); toast(`呼吸を ${i}-${h}-${e} にしました`); viewLife(); });
+  view.querySelectorAll('[data-sel]').forEach(el => el.onchange = () => { breath()[el.dataset.sel] = +el.value; save(); bsetOpen2 = true; viewLife(); });
+  const bp = document.getElementById('bpreset'); if (bp) bp.onchange = () => { if (!bp.value) return; const [i,h,e] = bp.value.split('-').map(Number); S.settings.breath = {i,h,e}; save(); bsetOpen2 = true; toast(`呼吸を ${i}-${h}-${e} にしました`); viewLife(); };
+  const b2 = document.getElementById('bset2'); if (b2){ b2.open = bsetOpen2; b2.ontoggle = () => { bsetOpen2 = b2.open; }; }
   bindMantra();
   document.getElementById('simple-on').onchange = e => { S.settings.simple = e.target.checked; bsetOpen = false; save(); toast(e.target.checked ? 'シンプルモードにしました' : 'すべての機能を表示します'); viewLife(); };
   document.getElementById('ios-timer').onchange = e => { S.settings.iosTimer = e.target.checked; save(); };
