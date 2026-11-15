@@ -262,6 +262,7 @@ button:disabled{opacity:.45;cursor:default}
 @keyframes padhit{0%{background:color-mix(in srgb,var(--accent) 18%,var(--bg))}100%{background:var(--bg)}}
 .tappad .breath{height:240px;width:100%}
 .tappad .ring,.tappad .orb,.tappad .breath-label{display:block}
+.padclock{position:absolute;left:16px;top:12px;font-size:.85rem;color:var(--muted);opacity:.5}
 .tapcount{position:absolute;right:16px;bottom:12px;font-size:.8rem;color:var(--muted);opacity:.45}
 .medctl{justify-content:space-between}
 body.med-on header.top{display:none}
@@ -432,6 +433,7 @@ if (!S.baseHabits){
 }
 S.settings = Object.assign({ resetHour:2, iosTimer:false, simple:true }, S.settings);
 if (!S.settings.clockV1){ S.settings.iosTimer = true; S.settings.clockV1 = 1; }
+if (!S.settings.clockV2){ S.settings.iosTimer = false; S.settings.clockV2 = 1; }
 RESET = S.settings.resetHour; TODAY = ymd(base());
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 const day = date => S.days[date] || (S.days[date] = { med:0, mood:0, good:'', next:'', habits:[] });
@@ -496,6 +498,7 @@ function viewTonight(){
         <span class="breath" aria-hidden="true"><span class="ring"></span><span class="orb" id="orb"></span><span class="breath-label" id="blabel"></span></span>
         ${S.settings.mantraOn !== false && activeMantras().length ? `<span class="mantra" id="mantra" aria-live="polite"></span>` : ''}
         <span class="tapcount mono" id="wcount" aria-hidden="true">${timer.wander||0}</span>
+        ${S.settings.iosTimer ? '' : `<span class="padclock mono" id="clock" aria-hidden="true">${fmt(timer.left)}</span>`}
       </button>` : pendingSession() ? pendingEntryPanel() : `
       <div class="breath"><div class="ring"></div><div class="orb" id="orb"></div><div class="breath-label" id="blabel"></div></div>
       ${S.settings.mantraOn !== false && activeMantras().length ? `<p class="mantra" id="mantra">${esc(activeMantras()[0].text)}</p>` : ''}`}
@@ -698,19 +701,24 @@ function bindBreath(){
 }
 
 let actx = null;
-function chime(){
+function bell(times, vol){
   try{
     actx = actx || new (window.AudioContext||window.webkitAudioContext)();
-    [528, 792].forEach((f,i) => {
-      const o = actx.createOscillator(), g = actx.createGain();
-      o.frequency.value = f; o.type = 'sine';
-      g.gain.setValueAtTime(0.0001, actx.currentTime + i*0.4);
-      g.gain.exponentialRampToValueAtTime(0.25, actx.currentTime + i*0.4 + 0.05);
-      g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + i*0.4 + 3);
-      o.connect(g).connect(actx.destination); o.start(actx.currentTime + i*0.4); o.stop(actx.currentTime + i*0.4 + 3.1);
-    });
+    if (actx.state === 'suspended') actx.resume();
+    for (let k = 0; k < times; k++){
+      const t0 = actx.currentTime + 0.05 + k*2.6;
+      [[528,1],[792,.5],[1056,.25]].forEach(([f,a]) => {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.frequency.value = f; o.type = 'sine';
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(vol*a, t0 + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 4);
+        o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0 + 4.1);
+      });
+    }
   }catch(e){}
 }
+function chime(){ bell(3, 0.4); }
 function haptic(){
   // Android などは Vibration API、iPhone（iOS 18 以降）はスイッチ部品の触覚フィードバックを使う
   try { if (navigator.vibrate && navigator.vibrate([300,150,300,150,600])) return; } catch(e){}
@@ -757,6 +765,7 @@ async function toggleTimer(){
   startTicking();
   viewTonight();
   if (S.settings.iosTimer) location.href = iosTimerUrl(timer.left);
+  else bell(1, 0.3);
 }
 function runPhase(i){
   clearTimeout(timer.phaseT);
@@ -1445,10 +1454,10 @@ function viewLife(){
       </div>
       <p class="small muted">この時刻をすぎて開くと、新しい日の記入欄になります。たとえば2:00なら、深夜1時の記入は前日の分として残ります。</p>
       <div class="setrow">
-        <label for="ios-timer">時計アプリのタイマーを使う</label>
+        <label for="ios-timer">時計アプリのタイマーを使う（ショートカット）</label>
         <input type="checkbox" id="ios-timer" switch ${S.settings.iosTimer?'checked':''}>
       </div>
-      <p class="small muted">オンにすると、瞑想を始めるときにショートカット「夜のノート瞑想」を呼び出し、選んだ分数を渡します。ショートカットの中身は「タイマーを開始（ショートカットの入力・分）」にしておきます。終わりの合図は時計アプリが鳴らします。</p>
+      <p class="small muted">オンにすると、瞑想を始めるときにショートカット「夜のノート瞑想」を呼び出し、選んだ分数を渡します。ショートカットの中身は「タイマーを開始（ショートカットの入力・分）」にしておきます。終わりの合図は時計アプリが鳴らします。オフのときは、アプリの中で時間を数え、始まりと終わりを鐘の音で知らせます（アプリから出ずに瞑想できます）。</p>
       <div class="setrow"><span>画面の色</span><button class="btn ghost" id="theme">${themeLabel()}</button></div>
     </section>
     ${dataPanel()}
