@@ -434,6 +434,7 @@ if (!S.baseHabits){
 S.settings = Object.assign({ resetHour:2, iosTimer:false, simple:true }, S.settings);
 if (!S.settings.clockV1){ S.settings.iosTimer = true; S.settings.clockV1 = 1; }
 if (!S.settings.clockV2){ S.settings.iosTimer = false; S.settings.clockV2 = 1; }
+if (!S.settings.clockV3){ S.settings.iosTimer = true; S.settings.clockV3 = 1; }
 RESET = S.settings.resetHour; TODAY = ymd(base());
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 const day = date => S.days[date] || (S.days[date] = { med:0, mood:0, good:'', next:'', habits:[] });
