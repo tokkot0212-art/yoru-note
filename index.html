@@ -410,7 +410,7 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
 <label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script>
-const APP_VERSION = 'v41', APP_UPDATED = '2026/11/15';
+const APP_VERSION = 'v42', APP_UPDATED = '2026/11/15';
 const KEY = 'yoru-note-v1';
 const pad = n => String(n).padStart(2,'0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -538,7 +538,7 @@ function viewTonight(){
         ${S.settings.mantraOn !== false && activeMantras().length ? `<span class="mantra" id="mantra" aria-live="polite"></span>` : ''}
         <span class="tapcount mono" id="wcount" aria-hidden="true">${timer.wander||0}</span>
         ${S.settings.iosTimer ? '' : `<span class="padclock mono" id="clock" aria-hidden="true">${fmt(timer.left)}</span>`}
-      </button>` : pendingSession() ? pendingEntryPanel() : `
+      </button>` : pendingSession() ? pendingEntryPanel() : postTrack ? postTrackPanel() : `
       <div class="breath"><div class="ring"></div><div class="orb" id="orb"></div><div class="breath-label" id="blabel"></div></div>
       ${S.settings.mantraOn !== false && activeMantras().length ? `<p class="mantra" id="mantra">${esc(activeMantras()[0].text)}</p>` : ''}`}
       ${timer.running ? '' : todaySessions(d)}
@@ -568,7 +568,7 @@ function viewTonight(){
       <p class="hint">${trackDay==='yday' ? '<b style="color:var(--accent)">昨日の分をつけています。</b>' : ''}○できた　△少しできた　×できなかった<span class="opt">。評価はここでつけ、「習慣」タブでは結果を見られます</span></p>
       <div>${S.habits.map(h=>`
         <div class="habit">
-          <span class="name">${esc(h.name)}<span class="wwhen">${habitStreak(h.id)}日連続</span></span>
+          <span class="name">${esc(h.name)}</span>
           ${oxButtons('data-habit', h.id, habitMark(trackDate(), h.id))}
         </div>`).join('') || '<p class="muted small">習慣タブで追加できます。</p>'}</div>
       ${wanderRow()}
@@ -870,6 +870,18 @@ function endEarly(){
   const elapsed = Math.max(1, Math.round((timer.total*1000 - Math.max(0, timer.endAt - Date.now())) / 60000));
   finishTimer(true, Math.min(elapsed, Math.round(timer.total/60)));
 }
+let postTrack = null;
+const SLOT_HABITS = { morning:['b-sleep'], noon:['b-meal'], night:['b-meal','b-move','b-focus'] };
+function postTrackPanel(){
+  const p = postTrack, ids = p.all ? BASE_HABITS.map(b => b.id) : (SLOT_HABITS[p.slot] || SLOT_HABITS.night);
+  const label = { morning:'朝の瞑想のあとに', noon:'昼の瞑想のあとに', night:'夜の瞑想のあとに' }[p.slot] || '瞑想のあとに';
+  const q = { 'b-sleep':'昨夜の睡眠は？', 'b-meal':'食事は？', 'b-move':'運動は？', 'b-focus':'OBLは？' };
+  return `<div class="entry" role="group" aria-label="${label}">
+    <p class="entry-h">${label}</p>
+    <div>${ids.map(id => { const h = S.habits.find(x => x.id === id) || BASE_HABITS.find(x => x.id === id); return `<div class="habit"><span class="name">${q[id] || esc(h.name)}</span>${oxButtons('data-pt', id, habitMark(p.day, id))}</div>`; }).join('')}</div>
+    <div class="row" style="justify-content:center">${p.all ? '' : '<button class="btn ghost small" id="pt-more">ほかの習慣もつける</button>'}<button class="btn primary" id="pt-done">完了</button></div>
+  </div>`;
+}
 function pendingSession(){
   const p = S.pendingEntry; if (!p) return null;
   const d = peek(p.day), x = d && d.sessions && d.sessions[p.idx];
@@ -896,7 +908,10 @@ function bindPending(){
     x.wander = tens*10 + ones; save(); viewTonight();
   });
   const z = document.getElementById('dg-zero'); if (z) z.onclick = () => { const x = pendingSession(); if (x){ x.wander = 0; save(); viewTonight(); } };
-  const sv = document.getElementById('dg-save'); if (sv) sv.onclick = () => { const x = pendingSession(); delete S.pendingEntry; save(); toast(`戻った回数 ${x ? x.wander : 0}回を記録しました`); viewTonight(); };
+  const sv = document.getElementById('dg-save'); if (sv) sv.onclick = () => { const x = pendingSession(), p = S.pendingEntry; delete S.pendingEntry; save(); if (x && p) postTrack = { day: p.day, slot: x.slot || autoSlot() }; toast(`戻った回数 ${x ? x.wander : 0}回を記録しました`); viewTonight(); };
+  view.querySelectorAll('[data-pt]').forEach(b => b.onclick = () => { const id = b.dataset.pt, v = b.dataset.v, dt = postTrack.day; setHabitMark(dt, id, habitMark(dt, id) === v ? '' : v); viewTonight(); });
+  const pd = document.getElementById('pt-done'); if (pd) pd.onclick = () => { postTrack = null; toast('おつかれさまでした'); viewTonight(); };
+  const pm = document.getElementById('pt-more'); if (pm) pm.onclick = () => { postTrack.all = true; viewTonight(); };
 }
 function restoreTimer(){
   try {
@@ -1125,7 +1140,7 @@ function viewHabits(){
         <div class="hblock">
           <div class="hhead">
             <span class="name">${esc(h.name)}</span>
-            <span class="streak">${habitStreak(h.id)}日連続</span>
+            <span class="streak">今週 ○△ ${weekDays(weekKey()).filter(dt => ['o','t'].includes(habitMark(dt, h.id))).length}日</span>
           </div>
           <div class="week">${last7.map(dt=>{const dd=new Date(dt+'T00:00'),m=habitMark(dt,h.id);return `<span class="cell mk ro ${m} ${dt===TODAY?'today':''}" role="img" aria-label="${dd.getMonth()+1}月${dd.getDate()}日 ${esc(h.name)} ${MARK_LABEL[m]||'未記入'}"><span class="w">${dt===TODAY?'今日':WD[dd.getDay()]}</span><span class="n">${MARK[m]||dd.getDate()}</span></span>`}).join('')}</div>
           <div class="row" style="justify-content:flex-end"><button class="linkbtn" data-del="${h.id}">${pendingDelete===h.id?'もう一度押すと削除':'この習慣を削除'}</button></div>
@@ -1476,7 +1491,7 @@ function viewLife(){
   <div style="display:flex;flex-direction:column;gap:16px">
     <div><h2>人生のログ</h2><p class="muted small">続けた日々が、そのまま地図になります。</p></div>
     <div class="stats">
-      <div class="stat"><div class="v">${streak}<small>日</small></div><div class="k">いまの連続</div></div>
+      <div class="stat"><div class="v">${Object.keys(S.days).filter(k => k.slice(0,7) === TODAY.slice(0,7) && active(S.days[k])).length}<small>日</small></div><div class="k">今月 記録した日</div></div>
       <div class="stat"><div class="v">${nights}<small>日</small></div><div class="k">続けた日の合計</div></div>
       <div class="stat"><div class="v">${(medMin/60).toFixed(1)}<small>時間</small></div><div class="k">瞑想した時間</div></div>
       <div class="stat"><div class="v">${S.learns.length}<small>件</small></div><div class="k">積み上げた学び</div></div>
