@@ -731,8 +731,13 @@ function startTicking(){
   timer.iv = setInterval(tick, 500);
   tick();
 }
+const isStandalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
 function iosTimerUrl(sec){
-  return 'shortcuts://run-shortcut?name=' + encodeURIComponent('夜のノート瞑想') + '&input=text&text=' + Math.ceil(sec/60);
+  const name = encodeURIComponent('夜のノート瞑想'), mins = Math.ceil(sec/60);
+  if (isStandalone()) return 'shortcuts://run-shortcut?name=' + name + '&input=text&text=' + mins;
+  // Safariで開いているときは、タイマー開始後にこのページへ自動で戻る
+  const back = location.origin + location.pathname + '#tonight';
+  return 'shortcuts://x-callback-url/run-shortcut?name=' + name + '&input=text&text=' + mins + '&x-success=' + encodeURIComponent(back);
 }
 async function toggleTimer(){
   if (timer.running){
