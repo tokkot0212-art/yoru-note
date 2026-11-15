@@ -290,6 +290,22 @@ body.med-on #sample-banner{display:none}
   .today.meditating > section[aria-labelledby="s1"]{position:static}
   nav.tabs .inner{max-width:720px}
 }
+.ygrid{display:grid;grid-template-columns:1fr;gap:18px}
+@media (min-width:700px){.ygrid{grid-template-columns:1fr 1fr}}
+.ytab{display:flex;flex-direction:column;gap:6px;min-width:0;overflow-x:auto}
+.ytab-h{display:flex;justify-content:space-between;align-items:baseline}
+.ytab-h b{font-size:.95rem}
+.ytab-h span{font-size:.74rem;color:var(--muted)}
+.ytab table{border-collapse:collapse;width:100%;min-width:300px;table-layout:fixed;font-family:var(--mono);font-size:.62rem}
+.ytab th,.ytab td{border:1px solid var(--line);text-align:center;padding:0;height:15px;line-height:14px;white-space:nowrap;overflow:hidden}
+.ytab thead th{color:var(--muted);font-weight:400;font-size:.58rem}
+.ytab tbody th,.ytab tfoot th,.ytab thead th:first-child{color:var(--muted);font-weight:400;width:24px;text-align:center}
+.ytab td.o{background:color-mix(in srgb,var(--good) 55%,transparent);color:var(--fg)}
+.ytab td.t{background:color-mix(in srgb,var(--accent) 55%,transparent);color:var(--fg)}
+.ytab td.x{background:color-mix(in srgb,var(--bad) 55%,transparent);color:var(--fg)}
+.ytab td.na{background:repeating-linear-gradient(45deg,transparent 0 3px,var(--line) 3px 4px)}
+.ytab td.now{outline:2px solid var(--fg);outline-offset:-2px}
+.ytab tfoot td{color:var(--muted);font-size:.6rem}
 .hywrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .hyinner{display:flex;flex-direction:column;gap:12px;min-width:620px}
 .hymonths{display:grid;grid-template-columns:repeat(52,1fr);gap:2px;font-size:.66rem;color:var(--muted);font-family:var(--mono);white-space:nowrap;margin-bottom:-6px}
@@ -392,7 +408,7 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
 <label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script>
-const APP_VERSION = 'v39', APP_UPDATED = '2026/11/15';
+const APP_VERSION = 'v40', APP_UPDATED = '2026/11/15';
 const KEY = 'yoru-note-v1';
 const pad = n => String(n).padStart(2,'0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -1485,7 +1501,7 @@ function viewLife(){
     ${dataPanel()}
   </div>`;
   view.querySelectorAll('[data-wy]').forEach(b => b.onclick = () => { wyMode = b.dataset.wy; viewLife(); });
-  const hw = document.getElementById('hywrap'); if (hw) hw.scrollLeft = hw.scrollWidth;
+  view.querySelectorAll('[data-hy]').forEach(b => b.onclick = () => { hyYear = (hyYear || base().getFullYear()) + (+b.dataset.hy); viewLife(); });
   bindData();
   document.getElementById('reset-hour').onchange = e => {
     S.settings.resetHour = RESET = +e.target.value; save(); refreshDay(); header(); toast(`切り替え時刻を${RESET}:00にしました`);
@@ -1523,32 +1539,36 @@ function wanderRow(){
   </div>`;
 }
 let wyMode = 'count';
+let hyYear = null;
 function habitYearPanel(){
-  const end = base(), start = weekStart(addDays(end, -7*51));
-  const days = []; for (let d = new Date(start); ymd(d) <= ymd(end); d = addDays(d, 1)) days.push(ymd(d));
-  const lead = (weekStart(end).getTime() - start.getTime()) / 864e5 / 7;
-  let months = '', lastM = -1;
-  let lastW = -9;
-  for (let w = 0; w < 52; w++){ const dt = addDays(start, w*7), m = dt.getMonth(); if (m !== lastM){ if (w - lastW >= 3){ months += `<span style="grid-column:${w+1}">${m+1}月</span>`; lastW = w; } lastM = m; } }
-  const rows = BASE_HABITS.map(b => {
-    const h = S.habits.find(x => x.id === b.id) || b;
-    const marks = days.map(dt => habitMark(dt, b.id));
-    const cnt = (arr, v) => arr.filter(m => m === v).length;
-    const last28 = marks.slice(-28), ok28 = last28.filter(m => m === 'o' || m === 't').length;
-    const cells = marks.map((m, i) => `<i class="${m}${days[i] === TODAY ? ' now' : ''}" title="${days[i]} ${MARK_LABEL[m] || '未記入'}"></i>`).join('');
-    return `<div class="hyrow">
-      <div class="hyname"><b>${esc(h.name)}</b><span class="mono">直近4週 ${ok28}/28日　1年 ○${cnt(marks,'o')} △${cnt(marks,'t')} ×${cnt(marks,'x')}</span></div>
-      <div class="hygrid">${cells}</div>
+  const y = hyYear || base().getFullYear();
+  const dim = m => new Date(y, m + 1, 0).getDate();
+  const tables = BASE_HABITS.map(bh => {
+    const h = S.habits.find(x => x.id === bh.id) || bh;
+    const tot = { o:0, t:0, x:0 }, mo = Array(12).fill(0);
+    let rows = '';
+    for (let d = 1; d <= 31; d++){
+      let tds = '';
+      for (let m = 0; m < 12; m++){
+        if (d > dim(m)){ tds += '<td class="na"></td>'; continue; }
+        const k = `${y}-${pad(m+1)}-${pad(d)}`, mk = k > TODAY ? '' : habitMark(k, bh.id);
+        if (mk){ tot[mk]++; if (mk === 'o' || mk === 't') mo[m]++; }
+        tds += `<td class="${mk}${k === TODAY ? ' now' : ''}">${MARK[mk] || ''}</td>`;
+      }
+      rows += `<tr><th>${d}</th>${tds}</tr>`;
+    }
+    return `<div class="ytab">
+      <div class="ytab-h"><b>${esc(h.name)}</b><span class="mono">○${tot.o} △${tot.t} ×${tot.x}</span></div>
+      <table><thead><tr><th>日</th>${[...Array(12)].map((_,m) => `<th>${m+1}月</th>`).join('')}</tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><th>○△</th>${mo.map(v => `<td>${v || ''}</td>`).join('')}</tr></tfoot></table>
     </div>`;
   }).join('');
   return `<section class="panel" aria-labelledby="hy">
-    <div class="row" style="justify-content:space-between;align-items:baseline"><h3 id="hy">1年間の成長</h3><span class="small muted">食事・睡眠・運動・OBL</span></div>
-    <div class="hywrap" id="hywrap"><div class="hyinner">
-      <div class="hymonths">${months}</div>
-      ${rows}
-    </div></div>
-    <div class="legend hylegend"><i class="o"></i>○できた <i class="t"></i>△少し <i class="x"></i>×できなかった <i></i>未記入</div>
-    <p class="hint">1マスが1日、縦の1列が1週間（上が月曜）です。「直近4週」は○か△をつけた日数です。</p>
+    <div class="row" style="justify-content:space-between;align-items:center"><h3 id="hy">1年間の成長</h3>
+      <div class="seg" role="group" aria-label="年"><button data-hy="-1" aria-label="前の年">◀</button><button aria-pressed="true" disabled>${y}年</button><button data-hy="1" aria-label="次の年">▶</button></div></div>
+    <div class="ygrid">${tables}</div>
+    <p class="hint">縦が日、横が月です。いちばん下の「○△」は、その月に○か△をつけた日数です。</p>
   </section>`;
 }
 function wanderYearPanel(){
