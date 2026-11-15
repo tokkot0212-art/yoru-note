@@ -323,6 +323,8 @@ body.med-on #sample-banner{display:none}
 .hylegend i{width:11px;height:11px;display:inline-block;margin-left:6px}
 .ver{font-size:.68rem;color:var(--muted);opacity:.6;text-align:center;margin:0}
 body.med-on .ver{display:none}
+.bulk{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.bulk textarea{min-height:110px}
 .sesslist{display:flex;flex-direction:column;gap:4px}
 .sess{display:grid;grid-template-columns:3.2em 1.6em 3em 4em 1fr;gap:6px;font-size:.82rem;color:var(--muted);padding-block:4px;border-top:1px solid var(--line)}
 .sess b{color:var(--fg)}
@@ -408,7 +410,7 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
 <label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script>
-const APP_VERSION = 'v40', APP_UPDATED = '2026/11/15';
+const APP_VERSION = 'v41', APP_UPDATED = '2026/11/15';
 const KEY = 'yoru-note-v1';
 const pad = n => String(n).padStart(2,'0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -629,6 +631,8 @@ const MANTRA_CATS = [
   { key:'accept', name:'受け入れる', lead:'変えられることと変えられないことを見分ける言葉' },
   { key:'own',    name:'自分の言葉', lead:'本や自分で見つけた言葉' }
 ];
+const allCats = () => MANTRA_CATS.concat(S.mantraCats || []);
+const catOf = k => allCats().find(c => c.key === k) || { key:k, name:'自分の言葉', lead:'' };
 const defaultCat = i => i < 4 ? 'kind' : i < 7 ? 'hard' : 'accept';
 function mantras(){
   if (!S.mantras) S.mantras = DEFAULT_MANTRAS.map((t,i) => ({ id:'m'+i, text:t, on: i < 4, cat: defaultCat(i) }));
@@ -657,20 +661,27 @@ function showMantra(text){
 function mantraSettings(){
   const ms = mantras(), on = S.settings.mantraOn !== false, n = ms.filter(m => m.on).length;
   return `<details class="mset" ${mantraEdit?'open':''} id="mset">
-    <summary><span>マントラ</span><span class="small muted">${on ? `${[...new Set(ms.filter(m => m.on).map(m => MANTRA_CATS.find(c => c.key === m.cat).name))].join('・') || 'なし'}・${n}個` : 'オフ'}</span></summary>
+    <summary><span>マントラ</span><span class="small muted">${on ? `${[...new Set(ms.filter(m => m.on).map(m => catOf(m.cat).name))].join('・') || 'なし'}・${n}個` : 'オフ'}</span></summary>
     <div class="setrow"><label for="mt-on">瞑想中にマントラを表示</label><input type="checkbox" id="mt-on" switch ${on?'checked':''}></div>
     <div class="setrow"><span class="small">順番</span><div class="seg" role="group" aria-label="順番"><button data-mo="seq" aria-pressed="${S.settings.mantraOrder!=='rand'}">上から順に</button><button data-mo="rand" aria-pressed="${S.settings.mantraOrder==='rand'}">ランダム</button></div></div>
     <p class="hint">使う言葉にチェックを入れます。吸い始めるたびに、次の言葉に切り替わります。カテゴリー名のボタンで、そのカテゴリーだけを使うように一度に切り替えられます。</p>
-    <div class="row" role="group" aria-label="カテゴリーで選ぶ">${MANTRA_CATS.map(c => { const items = ms.filter(m => m.cat === c.key), onN = items.filter(m => m.on).length; return items.length ? `<button class="chip sm" data-mcat="${c.key}" aria-pressed="${onN === items.length && onN === n}">${c.name}だけ</button>` : ''; }).join('')}</div>
-    ${MANTRA_CATS.map(c => { const items = ms.filter(m => m.cat === c.key); if (!items.length) return ''; const onN = items.filter(m => m.on).length; return `<div class="mcat">
-      <div class="mcat-h"><b>${c.name}</b><span class="small muted">${c.lead}</span><button class="linkbtn" data-mall="${c.key}">${onN === items.length ? 'すべて外す' : 'すべて使う'}</button></div>
+    <div class="row" role="group" aria-label="カテゴリーで選ぶ">${allCats().map(c => { const items = ms.filter(m => m.cat === c.key), onN = items.filter(m => m.on).length; return items.length ? `<button class="chip sm" data-mcat="${c.key}" aria-pressed="${onN === items.length && onN === n}">${c.name}だけ</button>` : ''; }).join('')}</div>
+    ${allCats().map(c => { const items = ms.filter(m => m.cat === c.key); if (!items.length) return ''; const onN = items.filter(m => m.on).length; return `<div class="mcat">
+      <div class="mcat-h"><b>${c.name}</b><span class="small muted">${c.lead}</span><button class="linkbtn" data-mall="${c.key}">${onN === items.length ? 'すべて外す' : 'すべて使う'}</button>${c.user ? `<button class="linkbtn" data-mset-del="${c.key}">${pendingDelete===c.key?'もう一度押すと削除':'まとまりを削除'}</button>` : ''}</div>
       <div class="mlist">${items.map(m => `<div class="mitem"><label><input type="checkbox" data-mon="${m.id}" ${m.on?'checked':''}><span>${esc(m.text)}</span></label><button class="linkbtn" data-mdel="${m.id}" aria-label="削除">${pendingDelete===m.id?'削除する':'×'}</button></div>`).join('')}</div>
     </div>`; }).join('')}
     <form class="dcol" id="mt-add">
-      <div class="row" role="group" aria-label="追加するカテゴリー"><span class="small muted">追加先</span>${MANTRA_CATS.map(c => `<button type="button" class="chip sm" data-mnc="${c.key}" aria-pressed="${mantraNewCat===c.key}">${c.name}</button>`).join('')}</div>
+      <div class="row" role="group" aria-label="追加するカテゴリー"><span class="small muted">追加先</span>${allCats().map(c => `<button type="button" class="chip sm" data-mnc="${c.key}" aria-pressed="${mantraNewCat===c.key}">${c.name}</button>`).join('')}</div>
       <div class="row" style="flex-wrap:nowrap"><input type="text" id="mt-new" placeholder="言葉を追加（本のマントラなど）" maxlength="60"><button class="btn" style="flex:none">追加</button></div>
     </form>
-    <p class="hint">追加した言葉は、このiPhoneの中だけに保存されます。</p>
+    <div class="bulk">
+      <b class="small">文章をまとめて登録</b>
+      <p class="hint">本の写真の文字を長押し（または「テキスト認識表示」）でコピーし、下に貼り付けます。1行が1呼吸ぶんです。改行や「。」で区切られた行が、上から順に1つずつ登録されます。</p>
+      <input type="text" id="bk-name" placeholder="まとまりの名前（例：慈愛の言葉）" maxlength="20">
+      <textarea id="bk-text" placeholder="ここに貼り付け"></textarea>
+      <button class="btn primary" id="bk-add" style="align-self:flex-start">この内容で登録して使う</button>
+    </div>
+    <p class="hint">追加・登録した言葉は、この端末の中だけに保存され、GitHubには上がりません。</p>
   </details>`;
 }
 function bindMantra(){
@@ -679,7 +690,7 @@ function bindMantra(){
   document.getElementById('mt-on').onchange = e => { S.settings.mantraOn = e.target.checked; save(); VIEWS[current](); };
   view.querySelectorAll('[data-mo]').forEach(b => b.onclick = () => { S.settings.mantraOrder = b.dataset.mo; mantraIdx = -1; save(); VIEWS[current](); });
   view.querySelectorAll('[data-mon]').forEach(c => c.onchange = () => { const m = mantras().find(x => x.id === c.dataset.mon); if (m){ m.on = c.checked; mantraIdx = -1; save(); VIEWS[current](); } });
-  view.querySelectorAll('[data-mcat]').forEach(b => b.onclick = () => { const k = b.dataset.mcat; mantras().forEach(m => m.on = m.cat === k); mantraIdx = -1; save(); toast(`「${MANTRA_CATS.find(c => c.key === k).name}」だけを使います`); VIEWS[current](); });
+  view.querySelectorAll('[data-mcat]').forEach(b => b.onclick = () => { const k = b.dataset.mcat; mantras().forEach(m => m.on = m.cat === k); mantraIdx = -1; save(); toast(`「${catOf(k).name}」だけを使います`); VIEWS[current](); });
   view.querySelectorAll('[data-mall]').forEach(b => b.onclick = () => { const k = b.dataset.mall, items = mantras().filter(m => m.cat === k), all = items.every(m => m.on); items.forEach(m => m.on = !all); mantraIdx = -1; save(); VIEWS[current](); });
   view.querySelectorAll('[data-mnc]').forEach(b => b.onclick = () => { mantraNewCat = b.dataset.mnc; view.querySelectorAll('[data-mnc]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
   view.querySelectorAll('[data-mdel]').forEach(b => b.onclick = () => {
@@ -688,9 +699,29 @@ function bindMantra(){
     else pendingDelete = id;
     VIEWS[current]();
   });
+  const ba = document.getElementById('bk-add');
+  if (ba) ba.onclick = () => {
+    const raw = document.getElementById('bk-text').value;
+    const lines = raw.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+    const parts = (lines.length > 1 ? lines : raw.split(/(?<=。)/)).map(x => x.trim()).filter(Boolean).slice(0, 12);
+    if (!parts.length){ toast('先に文章を貼り付けてください'); return; }
+    const name = document.getElementById('bk-name').value.trim() || `まとまり${(S.mantraCats || []).length + 1}`;
+    const key = 'u' + Date.now();
+    S.mantraCats = (S.mantraCats || []).concat([{ key, name, lead:`${parts.length}行を1呼吸に1行ずつ`, user:true }]);
+    mantras().forEach(m => m.on = false);
+    parts.forEach((t, i) => mantras().push({ id:key + '-' + i, text:t, on:true, cat:key }));
+    S.settings.mantraOrder = 'seq'; S.settings.mantraOn = true; mantraIdx = -1; mantraEdit = true;
+    save(); toast(`「${name}」を${parts.length}行で登録しました`); VIEWS[current]();
+  };
+  view.querySelectorAll('[data-mset-del]').forEach(b => b.onclick = () => {
+    const k = b.dataset.msetDel;
+    if (pendingDelete === k){ S.mantras = mantras().filter(m => m.cat !== k); S.mantraCats = (S.mantraCats || []).filter(c => c.key !== k); pendingDelete = null; mantraIdx = -1; save(); toast('まとまりを削除しました'); }
+    else pendingDelete = k;
+    VIEWS[current]();
+  });
   document.getElementById('mt-add').onsubmit = e => {
     e.preventDefault(); const v = document.getElementById('mt-new').value.trim(); if (!v) return;
-    mantras().push({ id:'m'+Date.now(), text:v, on:true, cat:mantraNewCat }); save(); mantraEdit = true; toast(`「${MANTRA_CATS.find(c => c.key === mantraNewCat).name}」に追加しました`); VIEWS[current]();
+    mantras().push({ id:'m'+Date.now(), text:v, on:true, cat:mantraNewCat }); save(); mantraEdit = true; toast(`「${catOf(mantraNewCat).name}」に追加しました`); VIEWS[current]();
   };
 }
 let bsetOpen = false, bsetOpen2 = false;
@@ -698,7 +729,7 @@ function breathSummary(){
   const b = breath(), p = BREATH_PRESETS.find(x => x.i===b.i && x.h===b.h && x.e===b.e);
   const slot = Object.fromEntries(SLOTS)[timer.running ? timer.slot : (medSlot || autoSlot())];
   const on = S.settings.mantraOn !== false && activeMantras().length;
-  const cats = on ? [...new Set(activeMantras().map(m => MANTRA_CATS.find(c => c.key === m.cat).name))].join('・') : 'なし';
+  const cats = on ? [...new Set(activeMantras().map(m => catOf(m.cat).name))].join('・') : 'なし';
   return `<div class="bsum"><span>${p ? p.name + ' ' : ''}<b class="mono">${patLabel(b)}</b>・${slot}・マントラ：${cats}</span><button class="linkbtn" id="bs-open" ${timer.running?'disabled':''}>変える</button></div>`;
 }
 function breathSettings(){
