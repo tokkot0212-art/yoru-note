@@ -325,6 +325,12 @@ body.med-on #sample-banner{display:none}
 body.med-on .ver{display:none}
 .bulk{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
 .bulk textarea{min-height:110px}
+.hright{display:flex;align-items:center;gap:10px}
+.gsync{font:inherit;font-size:.74rem;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.gsync.need{border-color:var(--accent);color:var(--accent)}
+.gsync.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 50%,transparent)}
+.gsync.error{color:var(--bad);border-color:var(--bad)}
+body.med-on .gsync{display:none}
 .sesslist{display:flex;flex-direction:column;gap:4px}
 .sess{display:grid;grid-template-columns:3.2em 1.6em 3em 4em 1fr;gap:6px;font-size:.82rem;color:var(--muted);padding-block:4px;border-top:1px solid var(--line)}
 .sess b{color:var(--fg)}
@@ -385,7 +391,7 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
       <div class="eyebrow mono" id="today-label"></div>
       <h1 id="greet">今日もおつかれさまでした</h1>
     </div>
-    <div class="moon" aria-hidden="true"></div>
+    <div class="hright"><button class="gsync" id="gsync" hidden>Googleで同期</button><div class="moon" aria-hidden="true"></div></div>
   </header>
 
   <div class="banner" id="sample-banner" hidden>
@@ -410,7 +416,7 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
 <label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script>
-const APP_VERSION = 'v42', APP_UPDATED = '2026/11/15';
+const APP_VERSION = 'v43', APP_UPDATED = '2026/11/15';
 const KEY = 'yoru-note-v1';
 const pad = n => String(n).padStart(2,'0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -473,7 +479,7 @@ if (!S.settings.clockV1){ S.settings.iosTimer = true; S.settings.clockV1 = 1; }
 if (!S.settings.clockV2){ S.settings.iosTimer = false; S.settings.clockV2 = 1; }
 if (!S.settings.clockV3){ S.settings.iosTimer = true; S.settings.clockV3 = 1; }
 RESET = S.settings.resetHour; TODAY = ymd(base());
-function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+function save(){ try { if (typeof markChanges === 'function') markChanges(); } catch(e){} try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} try { if (typeof scheduleSync === 'function') scheduleSync(); } catch(e){} }
 const day = date => S.days[date] || (S.days[date] = { med:0, mood:0, good:'', next:'', habits:[] });
 const peek = date => S.days[date];
 const active = d => d && (d.med > 0 || d.journal || (d.habits && d.habits.length));
@@ -1704,16 +1710,169 @@ function backupText(){ return JSON.stringify({ app: APP_ID, version: 1, exported
 function backupName(){ return `hibi-note-${ymd(new Date())}.json`; }
 function markBackedUp(){ S.lastBackup = Date.now(); save(); }
 let pendingImport = null;
+/* ---------- Google Drive sync ---------- */
+const GSCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+const GFILE = 'hibi-note.json';
+const SYNC_META_KEYS = ['habits','mantras','mantraCats','kbStars','catStars','baseHabits'];
+const SYNC_SETTING_KEYS = ['resetHour','breath','mantraOn','mantraOrder','sc4V1'];
+let _snap = null, gToken = null, gExp = 0, gFileId = null, gBusy = false, gTimer = null, gState = 'off';
+function metaOf(st){ const m = {}; SYNC_META_KEYS.forEach(k => m[k] = st[k]); m.settings = {}; SYNC_SETTING_KEYS.forEach(k => m.settings[k] = (st.settings || {})[k]); return m; }
+function snapOf(st){
+  const map = o => Object.fromEntries(Object.entries(o || {}).map(([k,v]) => [k, JSON.stringify(v)]));
+  return { days: map(st.days), weeks: map(st.weeks), learns: Object.fromEntries((st.learns || []).map(l => [l.id, JSON.stringify(l)])), meta: JSON.stringify(metaOf(st)) };
+}
+function markChanges(){
+  const now = Date.now(), cur = snapOf(S);
+  S._u = S._u || { days:{}, weeks:{}, learns:{}, meta:0 };
+  S._tomb = S._tomb || { learns:{} };
+  if (_snap){
+    for (const k in cur.days) if (cur.days[k] !== _snap.days[k]) S._u.days[k] = now;
+    for (const k in cur.weeks) if (cur.weeks[k] !== _snap.weeks[k]) S._u.weeks[k] = now;
+    for (const k in cur.learns) if (cur.learns[k] !== _snap.learns[k]) S._u.learns[k] = now;
+    for (const k in _snap.learns) if (!(k in cur.learns)) S._tomb.learns[k] = now;
+    if (cur.meta !== _snap.meta) S._u.meta = now;
+  }
+  _snap = cur;
+}
+const DEVICE_KEYS = ['lastBackup','pendingEntry'];
+const DEVICE_SETTINGS = ['iosTimer','simple','gClientId','gConsented','gLastSync','clockV1','clockV2','clockV3'];
+function mergeState(L, R){
+  const out = JSON.parse(JSON.stringify(R));
+  if (!L.sample){
+    const Lu = L._u || { days:{}, weeks:{}, learns:{}, meta:0 }, Ru = R._u || { days:{}, weeks:{}, learns:{}, meta:0 };
+    const pick = (field, ufield) => {
+      const keys = new Set([...Object.keys(L[field] || {}), ...Object.keys(R[field] || {})]);
+      out[field] = {}; out._u = out._u || { days:{}, weeks:{}, learns:{}, meta:0 };
+      keys.forEach(k => {
+        const lu = (Lu[ufield] || {})[k] || 0, ru = (Ru[ufield] || {})[k] || 0;
+        const useR = R[field] && k in R[field] && (!(L[field] && k in L[field]) || ru > lu);
+        out[field][k] = JSON.parse(JSON.stringify(useR ? R[field][k] : L[field][k]));
+        out._u[ufield][k] = Math.max(lu, ru);
+      });
+    };
+    pick('days','days'); pick('weeks','weeks');
+    const tomb = Object.assign({}, (R._tomb || {}).learns, (L._tomb || {}).learns);
+    for (const k in (R._tomb || {}).learns || {}) tomb[k] = Math.max(tomb[k] || 0, R._tomb.learns[k]);
+    const byId = {};
+    (R.learns || []).forEach(l => byId[l.id] = { l, u:(Ru.learns || {})[l.id] || 0 });
+    (L.learns || []).forEach(l => { const u = (Lu.learns || {})[l.id] || 0; if (!byId[l.id] || u >= byId[l.id].u) byId[l.id] = { l, u }; });
+    out.learns = Object.values(byId).filter(x => !(tomb[x.l.id] && tomb[x.l.id] >= x.u)).map(x => x.l).sort((a,b) => a.date < b.date ? -1 : 1);
+    out._u.learns = Object.fromEntries(Object.entries(byId).map(([k,x]) => [k, x.u]));
+    out._tomb = { learns: tomb };
+    const useRmeta = (Ru.meta || 0) > (Lu.meta || 0), src = useRmeta ? R : L;
+    SYNC_META_KEYS.forEach(k => out[k] = JSON.parse(JSON.stringify(src[k] ?? null)) ?? undefined);
+    out.settings = Object.assign({}, R.settings);
+    SYNC_SETTING_KEYS.forEach(k => out.settings[k] = (src.settings || {})[k]);
+    out._u.meta = Math.max(Lu.meta || 0, Ru.meta || 0);
+  }
+  out.settings = out.settings || {};
+  DEVICE_SETTINGS.forEach(k => { if ((L.settings || {})[k] !== undefined) out.settings[k] = L.settings[k]; else delete out.settings[k]; });
+  DEVICE_KEYS.forEach(k => { if (L[k] !== undefined) out[k] = L[k]; else delete out[k]; });
+  out.sample = false;
+  return out;
+}
+function gReady(){ return !!(window.google && google.accounts && google.accounts.oauth2); }
+function loadGis(){
+  if (gReady() || !S.settings.gClientId || document.getElementById('gis')) return;
+  const sc = document.createElement('script'); sc.id = 'gis'; sc.src = 'https://accounts.google.com/gsi/client'; sc.async = true;
+  sc.onload = () => setGState(gToken ? 'ok' : 'need');
+  document.head.appendChild(sc);
+}
+const tokenValid = () => gToken && Date.now() < gExp - 60000;
+function requestToken(){
+  return new Promise((resolve, reject) => {
+    if (!gReady()){ reject(new Error('notready')); return; }
+    const tc = google.accounts.oauth2.initTokenClient({
+      client_id: S.settings.gClientId, scope: GSCOPE,
+      callback: r => { if (r.error){ reject(r); return; } gToken = r.access_token; gExp = Date.now() + (r.expires_in || 3600) * 1000; S.settings.gConsented = true; resolve(gToken); },
+      error_callback: e => reject(e)
+    });
+    tc.requestAccessToken({ prompt: S.settings.gConsented ? '' : 'consent' });
+  });
+}
+async function gfetch(url, opt){
+  const r = await fetch(url, Object.assign({}, opt, { headers: Object.assign({ Authorization: 'Bearer ' + gToken }, (opt || {}).headers) }));
+  if (r.status === 401){ gToken = null; throw new Error('auth'); }
+  if (!r.ok) throw new Error('http' + r.status);
+  return r;
+}
+async function syncNow(){
+  if (gBusy || !tokenValid()) return;
+  gBusy = true; setGState('busy');
+  try {
+    if (!gFileId){
+      const r = await gfetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name)&q=${encodeURIComponent(`name='${GFILE}'`)}`);
+      const j = await r.json(); gFileId = (j.files && j.files[0] && j.files[0].id) || null;
+    }
+    let remote = null;
+    if (gFileId){ const r = await gfetch(`https://www.googleapis.com/drive/v3/files/${gFileId}?alt=media`); const j = await r.json(); remote = j && j.data ? j.data : null; }
+    markChanges();
+    if (remote){
+      const merged = mergeState(S, remote);
+      S = merged; RESET = S.settings.resetHour ?? 2;
+    }
+    if (S.sample && !remote){ gBusy = false; setGState('ok'); return; }
+    S.sample = false;
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+    _snap = snapOf(S);
+    const body = JSON.stringify({ app: APP_ID, version: 1, exportedAt: new Date().toISOString(), data: S });
+    if (gFileId){
+      await gfetch(`https://www.googleapis.com/upload/drive/v3/files/${gFileId}?uploadType=media`, { method:'PATCH', headers:{ 'Content-Type':'application/json' }, body });
+    } else {
+      const meta = { name: GFILE, parents: ['appDataFolder'] }, bd = 'hibi' + Date.now();
+      const mp = `--${bd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${bd}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${bd}--`;
+      const r = await gfetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method:'POST', headers:{ 'Content-Type':'multipart/related; boundary=' + bd }, body: mp });
+      gFileId = (await r.json()).id;
+    }
+    S.settings.gLastSync = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+    setGState('ok');
+    const typing = document.activeElement && /TEXTAREA|INPUT|SELECT/.test(document.activeElement.tagName);
+    if (!typing && !timer.running){ refreshDay(); header(); VIEWS[current](); }
+  } catch(e){
+    setGState(tokenValid() ? 'error' : 'need');
+  } finally { gBusy = false; }
+}
+function scheduleSync(){ if (!S.settings.gClientId || !tokenValid()) { if (S.settings.gClientId) setGState('need'); return; } clearTimeout(gTimer); gTimer = setTimeout(syncNow, 3000); }
+async function gTap(){
+  if (!S.settings.gClientId){ go('life'); return; }
+  if (tokenValid()){ syncNow(); return; }
+  if (!gReady()){ loadGis(); toast('準備中です。もう一度押してください'); return; }
+  try { await requestToken(); await syncNow(); toast('Googleドライブと同期しました'); }
+  catch(e){ setGState('need'); toast('Googleにつながりませんでした。もう一度押してください'); }
+}
+function setGState(st){
+  gState = st;
+  const b = document.getElementById('gsync'); if (!b) return;
+  if (!S.settings.gClientId){ b.hidden = true; return; }
+  b.hidden = false;
+  const t = S.settings.gLastSync ? new Date(S.settings.gLastSync) : null;
+  const tm = t ? `${pad(t.getHours())}:${pad(t.getMinutes())}` : '';
+  const label = { busy:'同期中…', ok:`同期済 ${tm}`, need:'Googleで同期', error:'同期エラー', off:'Googleで同期' }[st] || 'Googleで同期';
+  b.textContent = label; b.className = 'gsync ' + st;
+}
+function syncPanel(){
+  const id = S.settings.gClientId || '', t = S.settings.gLastSync ? new Date(S.settings.gLastSync) : null;
+  return `<div class="dstep"><span class="qn">G</span><div><h3>Googleドライブで自動同期</h3><p class="hint">iPadとPCで同じ記録を使えます。記録はあなたのGoogleドライブのアプリ専用の場所にだけ保存されます。つながっている間は記録するたびに自動で保存し、ログインが切れたら画面右上の「Googleで同期」を1回押します。</p></div></div>
+    <label class="f sub">クライアントID<input type="text" id="g-id" value="${esc(id)}" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off" spellcheck="false"></label>
+    <div class="row"><button class="btn" id="g-save">IDを保存</button>${id ? `<button class="btn primary" id="g-now">Googleで同期</button>` : ''}</div>
+    ${id ? `<p class="small muted">最後の同期：${t ? t.toLocaleString('ja-JP') : 'まだ同期していません'}</p>` : ''}`;
+}
+function bindSync(){
+  const s = document.getElementById('g-save'); if (s) s.onclick = () => { S.settings.gClientId = document.getElementById('g-id').value.trim(); save(); loadGis(); setGState('need'); toast(S.settings.gClientId ? 'IDを保存しました' : 'IDを消しました'); viewLife(); };
+  const n = document.getElementById('g-now'); if (n) n.onclick = gTap;
+}
+
 function dataPanel(){
   const sm = dataSummary(S), lb = S.lastBackup ? new Date(S.lastBackup) : null;
   const ago = lb ? Math.floor((Date.now() - lb) / 864e5) : null;
   const status = !lb ? 'まだバックアップがありません' : ago === 0 ? '今日バックアップ済み' : `${ago}日前にバックアップ`;
   return `<section class="panel" aria-labelledby="dh">
     <h3 id="dh">データの引き継ぎ</h3>
-    <div class="dnote"><b>アプリを更新しても、記録は消えません。</b><span>GitHubでファイルを差し替えても、記録はこのiPhoneの中にそのまま残ります。</span></div>
+    <div class="dnote"><b>アプリを更新しても、記録は消えません。</b><span>GitHubでファイルを差し替えても、記録はこの端末の中にそのまま残ります。</span></div>
     <p class="hint">ただし次のときは記録が消えるので、先にバックアップを作ってください：機種変更／ホーム画面のアイコンを削除して追加し直す／Safariの履歴とWebサイトデータを消去する。</p>
     <div class="dstatus ${!lb || ago > 14 ? 'warn' : ''}"><span>いまの記録</span><b>${status}</b></div>
     ${summaryList(sm)}
+    ${syncPanel()}
 
     <div class="dstep"><span class="qn">1</span><div><h3>バックアップを作る</h3><p class="hint">「ファイルに保存」で、iPhoneの「ファイル」アプリやiCloud Driveに保存できます。うまくいかないときは「コピー」して、メモアプリなどに貼っておきます。</p></div></div>
     <div class="row"><button class="btn primary" id="bk-file">ファイルに保存</button><button class="btn" id="bk-copy">コピー</button></div>
@@ -1751,6 +1910,7 @@ function showImportConfirm(text){
   }
 }
 function bindData(){
+  bindSync();
   document.getElementById('bk-file').onclick = async () => {
     const text = backupText(), name = backupName();
     try {
@@ -1791,7 +1951,10 @@ document.getElementById('clear-sample').onclick = () => {
   S = { habits:S.habits, days:{}, learns:[], sample:false, settings:S.settings }; save(); header(); go(current); toast('サンプルを消しました');
 };
 try { const t = localStorage.getItem(KEY+'-theme'); if (t) document.documentElement.dataset.theme = t; } catch(e){}
+_snap = snapOf(S);
+document.getElementById('gsync').onclick = gTap;
 header();
+if (S.settings.gClientId){ loadGis(); setGState('need'); }
 const hash = location.hash.slice(1);
 go(VIEWS[hash] ? hash : 'tonight');
 restoreTimer();
@@ -1799,6 +1962,7 @@ function onReturn(){
   if (document.visibilityState !== 'visible') return;
   if (refreshDay()){ header(); go(current); toast('新しい日になりました'); }
   if (timer.running){ tick(); keepAwake(); }
+  if (tokenValid()) syncNow(); else if (S.settings.gClientId) setGState('need');
 }
 document.addEventListener('visibilitychange', onReturn);
 window.addEventListener('pageshow', onReturn);
