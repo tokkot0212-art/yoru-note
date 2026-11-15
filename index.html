@@ -485,7 +485,8 @@ function viewTonight(){
       <div class="step"><span class="n">1</span><h2 id="s1">セルフコンパッション</h2>${doneMed?`<span class="done-tag">今日 ${d.med}分 済み</span>`:''}</div>
       ${timer.running ? '' : `<div class="row" role="group" aria-label="時間">
         ${[1,3,5,10,15].map(m=>`<button class="chip" data-min="${m}" aria-pressed="${timer.total===m*60}">${m}分</button>`).join('')}
-      </div>`}
+      </div>
+      <button class="btn ${pendingSession() ? '' : 'primary'} bigstart" id="tstart">${timer.total/60}分の瞑想を始める</button>`}
       ${timer.running ? `
       <div class="row medctl">
         <button class="btn ghost small" id="wminus" ${timer.wander?'':'disabled'}>1回取り消す</button>
@@ -498,8 +499,6 @@ function viewTonight(){
       </button>` : pendingSession() ? pendingEntryPanel() : `
       <div class="breath"><div class="ring"></div><div class="orb" id="orb"></div><div class="breath-label" id="blabel"></div></div>
       ${S.settings.mantraOn !== false && activeMantras().length ? `<p class="mantra" id="mantra">${esc(activeMantras()[0].text)}</p>` : ''}`}
-      ${timer.running ? '' : `
-      <button class="btn ${pendingSession() ? '' : 'primary'} bigstart" id="tstart">${timer.total/60}分の瞑想を始める</button>`}
       ${timer.running ? '' : todaySessions(d)}
     </section>
 
@@ -577,7 +576,14 @@ const DEFAULT_MANTRAS = [
   '変えられることは、変えていく',
   'その違いを、見きわめられますように'
 ];
+const SC4 = [
+  'いまは、つらいときだ',
+  'つらさは、誰の人生にもあるもの',
+  'この瞬間、自分にやさしくいよう',
+  'いまの自分に必要な思いやりを、自分に向けられますように'
+];
 const MANTRA_CATS = [
+  { key:'sc4',    name:'セルフコンパッション', lead:'4行を1呼吸に1行ずつ、順に唱える' },
   { key:'kind',   name:'やさしさ',   lead:'自分に慈しみを向ける言葉' },
   { key:'hard',   name:'つらいとき', lead:'うまくいかないときに唱える言葉' },
   { key:'accept', name:'受け入れる', lead:'変えられることと変えられないことを見分ける言葉' },
@@ -587,6 +593,12 @@ const defaultCat = i => i < 4 ? 'kind' : i < 7 ? 'hard' : 'accept';
 function mantras(){
   if (!S.mantras) S.mantras = DEFAULT_MANTRAS.map((t,i) => ({ id:'m'+i, text:t, on: i < 4, cat: defaultCat(i) }));
   S.mantras.forEach(m => { if (!m.cat){ const n = /^m(\d)$/.exec(m.id); m.cat = n ? defaultCat(+n[1]) : 'own'; } });
+  if (!S.settings.sc4V1){
+    S.mantras.forEach(m => m.on = false);
+    S.mantras.unshift(...SC4.map((t,i) => ({ id:'sc'+i, text:t, on:true, cat:'sc4' })));
+    S.settings.mantraOrder = 'seq'; S.settings.mantraOn = true; S.settings.sc4V1 = 1;
+    save();
+  }
   return S.mantras;
 }
 let mantraNewCat = 'own';
