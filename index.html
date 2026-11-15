@@ -416,7 +416,7 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
 <label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script>
-const APP_VERSION = 'v43', APP_UPDATED = '2026/11/15';
+const APP_VERSION = 'v44', APP_UPDATED = '2026/11/15';
 const KEY = 'yoru-note-v1';
 const pad = n => String(n).padStart(2,'0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -1735,7 +1735,7 @@ function markChanges(){
   _snap = cur;
 }
 const DEVICE_KEYS = ['lastBackup','pendingEntry'];
-const DEVICE_SETTINGS = ['iosTimer','simple','gClientId','gConsented','gLastSync','clockV1','clockV2','clockV3'];
+const DEVICE_SETTINGS = ['iosTimer','simple','gClientId','gConsented','gLastSync','clockV1','clockV2','clockV3','gidV1'];
 function mergeState(L, R){
   const out = JSON.parse(JSON.stringify(R));
   if (!L.sample){
@@ -1954,6 +1954,7 @@ try { const t = localStorage.getItem(KEY+'-theme'); if (t) document.documentElem
 _snap = snapOf(S);
 document.getElementById('gsync').onclick = gTap;
 header();
+if (!S.settings.gidV1){ if (!S.settings.gClientId) S.settings.gClientId = '929807360760-v44986pgi3hig6ntdfmg60mbmrm0ugh8.apps.googleusercontent.com'; S.settings.gidV1 = true; save(); }
 if (S.settings.gClientId){ loadGis(); setGState('need'); }
 const hash = location.hash.slice(1);
 go(VIEWS[hash] ? hash : 'tonight');
