@@ -209,6 +209,10 @@ details.catg summary::-webkit-details-marker{display:none}
 .stp b{font-size:1.1rem;font-weight:500;white-space:nowrap}
 .stp b small{font-size:.65rem;color:var(--muted);margin-left:1px}
 button:disabled{opacity:.45;cursor:default}
+.modesel{display:flex;flex-direction:column;gap:8px}
+.seg.big{display:flex;width:100%;border-radius:14px;margin-top:0}.seg.big button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;font-size:1rem}.seg.big small{font-size:.72rem;opacity:.7}
+.tappad.jihi{cursor:default}.tappad.jihi .mantra{font-size:1.35rem;min-height:4em;color:var(--ink,inherit);opacity:1}
+.jtag{font-size:.75rem;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
 .wander{display:flex;gap:8px;justify-content:center;align-items:center}
 .wbtn{display:flex;align-items:center;gap:10px;padding:12px 18px}
 .wbtn b{font-size:1.2rem;color:var(--accent)}
@@ -416,7 +420,7 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
 <label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script>
-const APP_VERSION = 'v44', APP_UPDATED = '2026/11/15';
+const APP_VERSION = 'v45', APP_UPDATED = '2026/11/17';
 const KEY = 'yoru-note-v1';
 const pad = n => String(n).padStart(2,'0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -514,10 +518,13 @@ function phases(){ const b = breath(); return [['吸って', b.i, 1.75], ['止�
 function autoSlot(){ const h = new Date().getHours(); return h >= 4 && h < 11 ? 'morning' : h >= 11 && h < 17 ? 'noon' : 'night'; }
 const patLabel = b => `${b.i}-${b.h}-${b.e}`;
 let medSlot = null;
+const isJihi = x => x && x.mode === 'jihi';
+const countSess = ss => (ss || []).filter(x => !isJihi(x));
+function medMode(){ return timer.running ? (timer.mode || 'count') : (S.settings.medMode || 'count'); }
 let wake = null;
 function saveTimer(){
   try {
-    if (timer.running) localStorage.setItem(TKEY, JSON.stringify({ total:timer.total, endAt:timer.endAt, startDay:timer.startDay, wander:timer.wander||0, slot:timer.slot, pat:timer.pat }));
+    if (timer.running) localStorage.setItem(TKEY, JSON.stringify({ total:timer.total, endAt:timer.endAt, startDay:timer.startDay, wander:timer.wander||0, slot:timer.slot, pat:timer.pat, mode:timer.mode||'count' }));
     else localStorage.removeItem(TKEY);
   } catch(e){}
 }
@@ -530,11 +537,18 @@ function viewTonight(){
     ${!isSimple() || [0,6].includes(base().getDay()) ? advicePanel() : ''}
     <section class="panel" aria-labelledby="s1">
       <div class="step"><span class="n">1</span><h2 id="s1">セルフコンパッション</h2>${doneMed?`<span class="done-tag">今日 ${d.med}分 済み</span>`:''}</div>
+      ${timer.running || pendingSession() || postTrack ? '' : modeSelector()}
       ${timer.running ? '' : `<div class="row" role="group" aria-label="時間">
         ${[1,3,5,10,15].map(m=>`<button class="chip" data-min="${m}" aria-pressed="${timer.total===m*60}">${m}分</button>`).join('')}
       </div>
-      <button class="btn ${pendingSession() ? '' : 'primary'} bigstart" id="tstart">${timer.total/60}分の瞑想を始める</button>`}
-      ${timer.running ? `
+      <button class="btn ${pendingSession() ? '' : 'primary'} bigstart" id="tstart">${timer.total/60}分の${medMode() === 'jihi' ? '慈悲の瞑想' : '呼吸瞑想'}を始める</button>`}
+      ${timer.running && medMode() === 'jihi' ? `
+      <div class="row medctl"><button class="btn" id="tend">瞑想を終える</button></div>
+      <div class="tappad jihi" aria-label="慈悲の瞑想中">
+        <span class="breath" aria-hidden="true"><span class="ring"></span><span class="orb" id="orb"></span><span class="breath-label" id="blabel"></span></span>
+        ${curMantras().length ? `<span class="mantra" id="mantra" aria-live="polite"></span>` : ''}
+        ${S.settings.iosTimer ? '' : `<span class="padclock mono" id="clock" aria-hidden="true">${fmt(timer.left)}</span>`}
+      </div>` : timer.running ? `
       <div class="row medctl">
         <button class="btn ghost small" id="wminus" ${timer.wander?'':'disabled'}>1回取り消す</button>
         <button class="btn" id="tend">瞑想を終える</button>
@@ -546,7 +560,7 @@ function viewTonight(){
         ${S.settings.iosTimer ? '' : `<span class="padclock mono" id="clock" aria-hidden="true">${fmt(timer.left)}</span>`}
       </button>` : pendingSession() ? pendingEntryPanel() : postTrack ? postTrackPanel() : `
       <div class="breath"><div class="ring"></div><div class="orb" id="orb"></div><div class="breath-label" id="blabel"></div></div>
-      ${S.settings.mantraOn !== false && activeMantras().length ? `<p class="mantra" id="mantra">${esc(activeMantras()[0].text)}</p>` : ''}`}
+      ${mantraVisible() ? `<p class="mantra" id="mantra">${esc(curMantras()[0].text)}</p>` : ''}`}
       ${timer.running ? '' : todaySessions(d)}
     </section>
 
@@ -587,6 +601,8 @@ function viewTonight(){
   document.body.classList.toggle('med-on', !!timer.running);
   const ts = document.getElementById('tstart'); if (ts) ts.onclick = async () => { await toggleTimer(); window.scrollTo(0,0); };
   const te = document.getElementById('tend'); if (te) te.onclick = () => endEarly();
+  view.querySelectorAll('[data-mm]').forEach(b => b.onclick = () => { S.settings.medMode = b.dataset.mm; mantraIdx = -1; save(); viewTonight(); });
+  view.querySelectorAll('[data-jc]').forEach(b => b.onclick = () => { S.settings.jihiCat = b.dataset.jc || null; mantraIdx = -1; save(); viewTonight(); });
   bindPending();
   bindBreath();
   bindMantra();
@@ -654,8 +670,20 @@ function mantras(){
 let mantraNewCat = 'own';
 function activeMantras(){ return mantras().filter(m => m.on); }
 let mantraIdx = -1, mantraEdit = false;
+function curMantras(){
+  if (medMode() === 'jihi'){ const k = S.settings.jihiCat, a = k ? mantras().filter(m => m.cat === k) : []; return a.length ? a : activeMantras(); }
+  return activeMantras();
+}
+const mantraVisible = () => curMantras().length > 0 && (medMode() === 'jihi' || S.settings.mantraOn !== false);
+function modeSelector(){
+  const m = medMode(), cats = allCats().filter(c => mantras().some(x => x.cat === c.key)), jc = S.settings.jihiCat && cats.some(c => c.key === S.settings.jihiCat) ? S.settings.jihiCat : '';
+  return `<div class="modesel">
+    <div class="seg big" role="group" aria-label="瞑想の種類"><button data-mm="count" aria-pressed="${m==='count'}">呼吸瞑想<small>気づきを数える</small></button><button data-mm="jihi" aria-pressed="${m==='jihi'}">慈悲の瞑想<small>数えない</small></button></div>
+    ${m === 'jihi' ? `<div class="row" role="group" aria-label="唱える言葉"><span class="small muted">唱える言葉</span><button class="chip sm" data-jc="" aria-pressed="${!jc}">いつものマントラ</button>${cats.map(c => `<button class="chip sm" data-jc="${c.key}" aria-pressed="${jc===c.key}">${esc(c.name)}</button>`).join('')}</div>` : ''}
+  </div>`;
+}
 function nextMantra(){
-  const a = activeMantras(); if (!a.length) return '';
+  const a = curMantras(); if (!a.length) return '';
   if (S.settings.mantraOrder === 'rand' && a.length > 1){ let j; do { j = Math.floor(Math.random()*a.length); } while (j === mantraIdx); mantraIdx = j; }
   else mantraIdx = (mantraIdx + 1) % a.length;
   return a[mantraIdx].text;
@@ -751,7 +779,7 @@ function todaySessions(d){
   const ss = (d && d.sessions) || [];
   if (!ss.length) return '';
   const lab = Object.fromEntries(SLOTS);
-  return `<div class="sesslist"><span class="eyebrow">今日の瞑想　戻りの回数はあとから直せます</span>${ss.map((x,i) => `<div class="sess edit"><span class="mono">${pad(new Date(x.at).getHours())}:${pad(new Date(x.at).getMinutes())}</span><span>${lab[x.slot]||''}</span><span class="mono">${x.min}分</span><span class="mono">${patLabel(x.pat)}</span><span class="wedit"><button data-sw="${i}" data-dv="-1" aria-label="戻りの回数を1回減らす">−</button><b class="mono">${x.wander}</b><button data-sw="${i}" data-dv="1" aria-label="戻りの回数を1回増やす">＋</button></span></div>`).join('')}</div>`;
+  return `<div class="sesslist"><span class="eyebrow">今日の瞑想　戻りの回数はあとから直せます</span>${ss.map((x,i) => `<div class="sess edit"><span class="mono">${pad(new Date(x.at).getHours())}:${pad(new Date(x.at).getMinutes())}</span><span>${lab[x.slot]||''}</span><span class="mono">${x.min}分</span><span class="mono">${patLabel(x.pat)}</span>${isJihi(x) ? '<span class="jtag">慈悲</span>' : `<span class="wedit"><button data-sw="${i}" data-dv="-1" aria-label="戻りの回数を1回減らす">−</button><b class="mono">${x.wander}</b><button data-sw="${i}" data-dv="1" aria-label="戻りの回数を1回増やす">＋</button></span>`}</div>`).join('')}</div>`;
 }
 function bindBreath(){
   view.querySelectorAll('[data-bp]').forEach(b => b.onclick = () => { const [i,h,e] = b.dataset.bp.split('-').map(Number); S.settings.breath = {i,h,e}; save(); viewTonight(); });
@@ -831,7 +859,7 @@ async function toggleTimer(){
   try { actx = actx || new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); } catch(e){}
   keepAwake();
   if (!timer.endAt || timer.left === timer.total){ timer.wander = 0; }
-  timer.pat = {...breath()}; timer.slot = medSlot || autoSlot(); mantraIdx = -1;
+  timer.pat = {...breath()}; timer.slot = medSlot || autoSlot(); timer.mode = S.settings.medMode || 'count'; mantraIdx = -1;
   timer.running = true;
   timer.endAt = Date.now() + timer.left*1000;
   timer.startDay = TODAY;
@@ -846,7 +874,7 @@ function runPhase(i){
   const orb = document.getElementById('orb'), lab = document.getElementById('blabel');
   if (!orb || !timer.running) return;
   const ph = phases(); const [name, sec, scale] = ph[i % ph.length];
-  if (i % ph.length === 0 && S.settings.mantraOn !== false) showMantra(nextMantra());
+  if (i % ph.length === 0 && mantraVisible()) showMantra(nextMantra());
   orb.style.transitionDuration = sec + 's';
   orb.style.transform = `scale(${scale})`;
   lab.textContent = name;
@@ -863,12 +891,14 @@ function finishTimer(late, minsOverride){
   if (!late && !S.settings.iosTimer){ chime(); haptic(); }
   const dd = day(dayKey);
   dd.med = (dd.med || 0) + mins;
-  (dd.sessions = dd.sessions || []).push({ at: Date.now(), min: mins, pat: timer.pat || {...breath()}, slot: timer.slot || autoSlot(), wander: timer.wander || 0 });
-  S.pendingEntry = { day: dayKey, idx: dd.sessions.length - 1 };
+  const jihi = timer.mode === 'jihi', slot = timer.slot || autoSlot();
+  (dd.sessions = dd.sessions || []).push(jihi ? { at: Date.now(), min: mins, pat: timer.pat || {...breath()}, slot, mode: 'jihi', wander: 0 } : { at: Date.now(), min: mins, pat: timer.pat || {...breath()}, slot, wander: timer.wander || 0 });
+  if (jihi) postTrack = { day: dayKey, slot };
+  else S.pendingEntry = { day: dayKey, idx: dd.sessions.length - 1 };
   timer.wander = 0; timer.endAt = 0;
   save();
   timer.left = timer.total;
-  toast(`${mins}分の瞑想を記録しました。戻った回数を入れてください`);
+  toast(jihi ? `${mins}分の慈悲の瞑想を記録しました` : `${mins}分の瞑想を記録しました。戻った回数を入れてください`);
   if (current === 'tonight') viewTonight();
 }
 function endEarly(){
@@ -923,7 +953,7 @@ function restoreTimer(){
   try {
     const t = JSON.parse(localStorage.getItem(TKEY) || 'null');
     if (!t || !t.endAt) return;
-    timer.total = t.total; timer.endAt = t.endAt; timer.startDay = t.startDay; timer.wander = t.wander || 0; timer.slot = t.slot; timer.pat = t.pat; timer.running = true;
+    timer.total = t.total; timer.endAt = t.endAt; timer.startDay = t.startDay; timer.wander = t.wander || 0; timer.slot = t.slot; timer.pat = t.pat; timer.mode = t.mode || 'count'; timer.running = true;
     if (Date.now() >= t.endAt) finishTimer(true);
     else { startTicking(); keepAwake(); if (current === 'tonight') viewTonight(); }
   } catch(e){}
@@ -1572,10 +1602,10 @@ function viewLife(){
     viewLife();
   };
 }
-function dayWander(d){ if (!d) return null; const ss = d.sessions || []; if (!ss.length && d.wanderExtra == null) return null; return ss.reduce((a,x) => a + x.wander, 0) + (d.wanderExtra || 0); }
+function dayWander(d){ if (!d) return null; const ss = countSess(d.sessions); if (!ss.length && d.wanderExtra == null) return null; return ss.reduce((a,x) => a + x.wander, 0) + (d.wanderExtra || 0); }
 function dayMedMin(d){ return d ? (d.sessions || []).reduce((a,x) => a + x.min, 0) : 0; }
 function adjustDayWander(date, dv){
-  const d = day(date), ss = d.sessions || [];
+  const d = day(date), ss = countSess(d.sessions);
   if (dv > 0) d.wanderExtra = (d.wanderExtra || 0) + 1;
   else if (d.wanderExtra > 0) d.wanderExtra--;
   else { const last = [...ss].reverse().find(x => x.wander > 0); if (last) last.wander--; else if (!ss.length) d.wanderExtra = 0; }
@@ -1627,7 +1657,7 @@ function wanderYearPanel(){
   const end = weekStart(base()), weeks = [];
   for (let i = 51; i >= 0; i--){
     const ws = addDays(end, -7*i); let sum = 0, days = 0, min = 0;
-    for (let j = 0; j < 7; j++){ const d = peek(ymd(addDays(ws, j))), v = dayWander(d); if (v != null){ sum += v; days++; min += dayMedMin(d); } }
+    for (let j = 0; j < 7; j++){ const d = peek(ymd(addDays(ws, j))), v = dayWander(d); if (v != null){ sum += v; days++; min += d ? countSess(d.sessions).reduce((a,x) => a + x.min, 0) : 0; } }
     weeks.push({ ws, v: days ? (wyMode === 'count' ? sum / days : (min ? sum / min * 10 : null)) : null });
   }
   const has = weeks.filter(w => w.v != null);
@@ -1673,6 +1703,10 @@ function wanderTrend(all){
 function medStatsPanel(){
   const all = [];
   Object.keys(S.days).sort().forEach(k => (S.days[k].sessions || []).forEach(x => all.push({ ...x, date:k })));
+  const jihiAll = all.filter(isJihi), jMin = jihiAll.reduce((a,x) => a + x.min, 0);
+  all.splice(0, all.length, ...all.filter(x => !isJihi(x)));
+  const jihiLine = jihiAll.length ? `<p class="small" style="margin:0">慈悲の瞑想　<b class="mono">${jihiAll.length}</b>回・合計 <b class="mono">${jMin}</b>分<span class="muted">（数えないので、下の表には入りません）</span></p>` : '';
+  if (!all.length && jihiAll.length) return `<section class="panel"><h3>瞑想のバリエーション</h3>${jihiLine}</section>`;
   if (!all.length) return `<section class="panel"><h3>瞑想のバリエーション</h3><p class="muted small">「今日」タブで呼吸のリズムや時間帯を変えて瞑想すると、ここで比べられます。</p></section>`;
   const per10 = arr => { const m = arr.reduce((a,x) => a + x.min, 0); return m ? (arr.reduce((a,x) => a + x.wander, 0) / m * 10) : 0; };
   const group = keyFn => { const g = {}; all.forEach(x => (g[keyFn(x)] = g[keyFn(x)] || []).push(x)); return Object.entries(g).sort((a,b) => b[1].length - a[1].length); };
@@ -1681,7 +1715,8 @@ function medStatsPanel(){
     ${rows.map(([k, arr]) => `<div class="mrow"><span>${labFn(k)}</span><span class="mono">${arr.length}</span><span class="mono">${arr.reduce((a,x)=>a+x.min,0)}分</span><span class="mono">${per10(arr).toFixed(1)}</span></div>`).join('')}</div>`;
   const recent = all.slice(-5).reverse();
   return `<section class="panel">
-    <div class="row" style="justify-content:space-between"><h3>瞑想のバリエーション</h3><span class="small muted">全${all.length}回</span></div>
+    <div class="row" style="justify-content:space-between"><h3>瞑想のバリエーション</h3><span class="small muted">呼吸瞑想 全${all.length}回</span></div>
+    ${jihiLine}
     ${wanderTrend(all)}
     ${table('呼吸（吸-止-吐）', group(x => patLabel(x.pat)), k => k)}
     ${table('時間帯', group(x => x.slot), k => lab[k] || k)}
