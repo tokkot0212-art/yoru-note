@@ -214,8 +214,10 @@ details.catg summary::-webkit-details-marker{display:none}
 .stp b small{font-size:.65rem;color:var(--muted);margin-left:1px}
 button:disabled{opacity:.45;cursor:default}
 .medtry .mtags{display:flex;gap:6px}.mtag{padding:4px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:.9rem}.mtag.on{background:var(--good);border-color:var(--good);color:var(--bg);font-weight:700}
-.wakeedit{display:flex;gap:6px;align-items:center}.subhab{margin-top:8px;border-top:1px dashed var(--line);padding-top:8px}.subhab summary{display:flex;gap:10px;align-items:baseline;cursor:pointer;padding:6px 0}.chip.on{background:var(--good);border-color:var(--good);color:var(--bg);font-weight:700}
+.wakeedit{display:flex;gap:6px;align-items:center}.subhab{margin-top:8px;border-top:1px dashed var(--line);padding-top:8px}.subhab .subh{display:flex;gap:10px;align-items:baseline;padding:6px 0}.chip.on{background:var(--good);border-color:var(--good);color:var(--bg);font-weight:700}
 .arearow .seg{flex-wrap:wrap}
+.tbtn{border:0;background:transparent;padding:2px 4px;font:inherit;font-size:.85rem;cursor:pointer}.tbtn.add{color:var(--muted);opacity:.7}
+.tedit{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:6px;font-size:.9rem}.tedit input{flex:1;min-width:140px;padding:6px 8px}
 .atask{font-size:.85rem;color:var(--accent);margin-left:2px}.wakeedit input{width:auto;padding:6px 8px}
 .atag{font-size:.72rem;padding:1px 7px;margin-right:6px;border-radius:999px;background:var(--accent);color:var(--accent-ink);vertical-align:1px}
 .arearow{align-items:center;gap:8px}.arearow .seg{margin-top:0}
@@ -431,7 +433,7 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
 <label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script>
-const APP_VERSION = 'v54', APP_UPDATED = '2026/11/18';
+const APP_VERSION = 'v56', APP_UPDATED = '2026/11/18';
 const KEY = 'yoru-note-v1';
 const pad = n => String(n).padStart(2,'0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -448,18 +450,18 @@ const MOODS = ['ぐったり','いまいち','ふつう','まずまず','いい�
 const BASE_HABITS = [ {id:'b-meal', name:'食事'}, {id:'b-sleep', name:'睡眠'}, {id:'b-move', name:'運動'}, {id:'b-focus', name:'OBL'} ];
 const habitsOrdered = () => { const ord = BASE_HABITS.map(b => b.id); return S.habits.slice().sort((a,b) => { const i = ord.indexOf(a.id), j = ord.indexOf(b.id); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); }); };
 const SUB_HABITS = [ {id:'s-rel', name:'親密な人間関係'}, {id:'s-nat', name:'自然'}, {id:'s-mind', name:'メンタル'} ];
-const AREAS = [['b-meal','食事'],['b-sleep','睡眠'],['b-move','運動'],['s-rel','人間関係'],['s-nat','自然'],['s-mind','メンタル']];
+const AREAS = [['b-meal','食事'],['b-sleep','睡眠'],['b-move','運動'],['b-focus','OBL'],['s-rel','人間関係'],['s-nat','自然'],['s-mind','メンタル']];
 let subOpen = false;
 function lastDone(id, dt){ for (let i = 0; i < 120; i++){ const k = ymd(addDays(new Date(dt+'T12:00'), -i)); if (habitMark(k, id) === 'o') return i; } return null; }
 function monthCount(id, dt){ const pre = dt.slice(0,7); return Object.keys(S.days || {}).filter(k => k.startsWith(pre) && k <= dt && habitMark(k, id) === 'o').length; }
 function subPanel(dt){
-  return `<details class="subhab" id="subhab" ${subOpen ? 'open' : ''}>
-    <summary><b>ときどき</b><span class="small muted">親密な人間関係・自然・メンタル</span></summary>
+  return `<div class="subhab">
+    <div class="subh"><b>サブカテゴリー</b><span class="small muted">毎日でなくてOK</span></div>
     ${SUB_HABITS.map(h => { const on = habitMark(dt, h.id) === 'o', l = lastDone(h.id, dt); return `<div class="habit">
       <span class="name">${h.name}${areaNote(dt, h.id)}<span class="wwhen">${l == null ? 'まだ記録なし' : l === 0 ? '今日した' : `最後は${l}日前`}・今月 ${monthCount(h.id, dt)}回</span></span>
       <button class="chip ${on ? 'on' : ''}" data-sub="${h.id}" aria-pressed="${on}">${on ? '✓ した' : 'した'}</button>
     </div>`; }).join('')}
-  </details>`;
+  </div>`;
 }
 const AREA_NAME = Object.fromEntries(AREAS);
 const medDone = (dt, slot) => ((peek(dt) || {}).sessions || []).some(x => x.slot === slot);
@@ -478,6 +480,27 @@ function bindWake(rerender){
   view.querySelectorAll('[data-wakenow]').forEach(b => b.onclick = () => { const n = new Date(); day(b.dataset.wakenow).wake = `${pad(n.getHours())}:${pad(n.getMinutes())}`; save(); toast(`起きた時間 ${day(b.dataset.wakenow).wake} を記録しました`); rerender(); });
 }
 function areaNote(dt, hid){ const ts = weekFor(dt).tasks.filter(t => t.area === hid); return ts.map(t => `<span class="atask">【${esc(t.name)}】</span>`).join(''); }
+let taskEdit = null;
+function areaEdit(dt, hid){
+  if (!AREA_NAME[hid]) return '';
+  const w = weekFor(dt), t = w.tasks.find(x => x.area === hid);
+  if (taskEdit === hid) return `<form class="tedit" data-tform="${hid}"><span>【</span><input type="text" id="tedit-in" value="${t ? esc(t.name) : ''}" placeholder="今週のタスク" maxlength="40"><span>】</span><button class="btn small primary">保存</button>${t ? `<button type="button" class="btn small ghost" data-tdel="${hid}">外す</button>` : ''}<button type="button" class="btn small ghost" data-tcancel>やめる</button></form>`;
+  if (!t && w.tasks.length >= weekMax()) return '';
+  return t ? `<button class="atask tbtn" data-tset="${hid}">【${esc(t.name)}】</button>` : `<button class="tbtn add" data-tset="${hid}">【＋今週のタスク】</button>`;
+}
+function bindAreaEdit(dt, rerender){
+  const w = weekFor(dt);
+  view.querySelectorAll('[data-tset]').forEach(b => b.onclick = () => { taskEdit = b.dataset.tset; rerender(); const i = document.getElementById('tedit-in'); if (i) i.focus(); });
+  view.querySelectorAll('[data-tcancel]').forEach(b => b.onclick = () => { taskEdit = null; rerender(); });
+  view.querySelectorAll('[data-tdel]').forEach(b => b.onclick = () => { const hid = b.dataset.tdel; w.tasks = w.tasks.filter(x => x.area !== hid); taskEdit = null; save(); toast('今週のタスクを外しました'); rerender(); });
+  view.querySelectorAll('[data-tform]').forEach(f => f.onsubmit = e => {
+    e.preventDefault(); const hid = f.dataset.tform, v = document.getElementById('tedit-in').value.trim(), t = w.tasks.find(x => x.area === hid);
+    if (!v){ if (t){ w.tasks = w.tasks.filter(x => x !== t); save(); } taskEdit = null; rerender(); return; }
+    if (t){ t.name = v; save(); }
+    else { if (!addWeekTask(v, null, w)) return; w.tasks[w.tasks.length - 1].area = hid; save(); }
+    taskEdit = null; toast(`${AREA_NAME[hid]}【${v}】を今週のタスクにしました`); rerender();
+  });
+}
 function seed(){
   let r = 7; const rnd = () => (r = (r*16807) % 2147483647) / 2147483647;
   const habits = BASE_HABITS.map(h => ({...h}));
@@ -961,12 +984,10 @@ function pendingEntryPanel(){
   const x = pendingSession(); if (!x) return '';
   const v = Math.max(0, Math.min(99, x.wander || 0)), tens = Math.floor(v / 10), ones = v % 10;
   return `<div class="entry" role="group" aria-label="戻った回数の記入">
-    <p class="entry-h">おつかれさまでした。呼吸に戻った回数は？</p>
     <div class="digits">
       <button class="digit" data-dg="10" aria-label="十の位を1つ増やす"><b class="mono">${tens}</b><span>十の位</span></button>
       <button class="digit" data-dg="1" aria-label="一の位を1つ増やす"><b class="mono">${ones}</b><span>一の位</span></button>
     </div>
-    <p class="small muted" style="text-align:center">押すたびに1つ増え、9の次は0に戻ります。合計 <b class="mono">${v}</b> 回</p>
     <div class="row" style="justify-content:center"><button class="btn ghost small" id="dg-zero">0にする</button><button class="btn primary" id="dg-save">この回数で記録する</button></div>
   </div>`;
 }
@@ -1224,7 +1245,7 @@ function viewHabits(){
         <button class="btn primary" style="flex:none">追加</button>
       </form>
     </section>
-    <h3 style="margin-top:4px">ときどき<span class="small muted" style="font-weight:400;margin-left:8px">毎日でなくてOK</span></h3>
+    <h3 style="margin-top:4px">サブカテゴリー<span class="small muted" style="font-weight:400;margin-left:8px">毎日でなくてOK</span></h3>
     <section class="panel"><div>${SUB_HABITS.map(h => { const l = lastDone(h.id, TODAY); return `<div class="habit"><span class="name">${h.name}</span><span class="small mono">今月 ${monthCount(h.id, TODAY)}回・${l == null ? '記録なし' : l === 0 ? '今日' : `${l}日前`}</span></div>`; }).join('')}</div></section>
     <p class="muted small">基本の4つ（食事・睡眠・運動・OBL）で十分です。増やすときは「2分でできること」から1つずつ。</p>
   </div>`;
