@@ -214,7 +214,9 @@ details.catg summary::-webkit-details-marker{display:none}
 .stp b small{font-size:.65rem;color:var(--muted);margin-left:1px}
 button:disabled{opacity:.45;cursor:default}
 .medtry .mtags{display:flex;gap:6px}.mtag{padding:4px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:.9rem}.mtag.on{background:var(--good);border-color:var(--good);color:var(--bg);font-weight:700}
-.wakeedit{display:flex;gap:6px;align-items:center}.wakeedit input{width:auto;padding:6px 8px}
+.wakeedit{display:flex;gap:6px;align-items:center}.subhab{margin-top:8px;border-top:1px dashed var(--line);padding-top:8px}.subhab summary{display:flex;gap:10px;align-items:baseline;cursor:pointer;padding:6px 0}.chip.on{background:var(--good);border-color:var(--good);color:var(--bg);font-weight:700}
+.arearow .seg{flex-wrap:wrap}
+.atask{font-size:.85rem;color:var(--accent);margin-left:2px}.wakeedit input{width:auto;padding:6px 8px}
 .atag{font-size:.72rem;padding:1px 7px;margin-right:6px;border-radius:999px;background:var(--accent);color:var(--accent-ink);vertical-align:1px}
 .arearow{align-items:center;gap:8px}.arearow .seg{margin-top:0}
 .waket span{text-align:center;font-size:.72rem;color:var(--muted)}
@@ -429,7 +431,7 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
 <label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script>
-const APP_VERSION = 'v48', APP_UPDATED = '2026/11/18';
+const APP_VERSION = 'v54', APP_UPDATED = '2026/11/18';
 const KEY = 'yoru-note-v1';
 const pad = n => String(n).padStart(2,'0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -444,7 +446,21 @@ const MOODS = ['ぐったり','いまいち','ふつう','まずまず','いい�
 
 /* ---------- data ---------- */
 const BASE_HABITS = [ {id:'b-meal', name:'食事'}, {id:'b-sleep', name:'睡眠'}, {id:'b-move', name:'運動'}, {id:'b-focus', name:'OBL'} ];
-const AREAS = [['b-meal','食事'],['b-sleep','睡眠'],['b-move','運動']];
+const habitsOrdered = () => { const ord = BASE_HABITS.map(b => b.id); return S.habits.slice().sort((a,b) => { const i = ord.indexOf(a.id), j = ord.indexOf(b.id); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); }); };
+const SUB_HABITS = [ {id:'s-rel', name:'親密な人間関係'}, {id:'s-nat', name:'自然'}, {id:'s-mind', name:'メンタル'} ];
+const AREAS = [['b-meal','食事'],['b-sleep','睡眠'],['b-move','運動'],['s-rel','人間関係'],['s-nat','自然'],['s-mind','メンタル']];
+let subOpen = false;
+function lastDone(id, dt){ for (let i = 0; i < 120; i++){ const k = ymd(addDays(new Date(dt+'T12:00'), -i)); if (habitMark(k, id) === 'o') return i; } return null; }
+function monthCount(id, dt){ const pre = dt.slice(0,7); return Object.keys(S.days || {}).filter(k => k.startsWith(pre) && k <= dt && habitMark(k, id) === 'o').length; }
+function subPanel(dt){
+  return `<details class="subhab" id="subhab" ${subOpen ? 'open' : ''}>
+    <summary><b>ときどき</b><span class="small muted">親密な人間関係・自然・メンタル</span></summary>
+    ${SUB_HABITS.map(h => { const on = habitMark(dt, h.id) === 'o', l = lastDone(h.id, dt); return `<div class="habit">
+      <span class="name">${h.name}${areaNote(dt, h.id)}<span class="wwhen">${l == null ? 'まだ記録なし' : l === 0 ? '今日した' : `最後は${l}日前`}・今月 ${monthCount(h.id, dt)}回</span></span>
+      <button class="chip ${on ? 'on' : ''}" data-sub="${h.id}" aria-pressed="${on}">${on ? '✓ した' : 'した'}</button>
+    </div>`; }).join('')}
+  </details>`;
+}
 const AREA_NAME = Object.fromEntries(AREAS);
 const medDone = (dt, slot) => ((peek(dt) || {}).sessions || []).some(x => x.slot === slot);
 function medTryRow(dt){
@@ -461,7 +477,7 @@ function bindWake(rerender){
   view.querySelectorAll('[data-wake]').forEach(i => i.onchange = () => { const d = day(i.dataset.wake); if (i.value) d.wake = i.value; else delete d.wake; save(); toast(i.value ? `起きた時間 ${i.value} を記録しました` : '起きた時間を消しました'); });
   view.querySelectorAll('[data-wakenow]').forEach(b => b.onclick = () => { const n = new Date(); day(b.dataset.wakenow).wake = `${pad(n.getHours())}:${pad(n.getMinutes())}`; save(); toast(`起きた時間 ${day(b.dataset.wakenow).wake} を記録しました`); rerender(); });
 }
-function areaNote(dt, hid){ const ts = weekFor(dt).tasks.filter(t => t.area === hid); return ts.map(t => `<span class="wwhen">今週：${esc(t.name)}</span>`).join(''); }
+function areaNote(dt, hid){ const ts = weekFor(dt).tasks.filter(t => t.area === hid); return ts.map(t => `<span class="atask">【${esc(t.name)}】</span>`).join(''); }
 function seed(){
   let r = 7; const rnd = () => (r = (r*16807) % 2147483647) / 2147483647;
   const habits = BASE_HABITS.map(h => ({...h}));
@@ -584,7 +600,6 @@ function viewTonight(){
         ${S.settings.iosTimer ? '' : `<span class="padclock mono" id="clock" aria-hidden="true">${fmt(timer.left)}</span>`}
       </button>` : pendingSession() ? pendingEntryPanel() : postTrack ? postTrackPanel() : `
       ${mantraVisible() ? `<p class="mantra" id="mantra">${esc(curMantras()[0].text)}</p>` : ''}`}
-      ${timer.running ? '' : todaySessions(d)}
     </section>
 
     <section class="panel" aria-labelledby="s2">
@@ -608,15 +623,14 @@ function viewTonight(){
     <section class="panel" aria-labelledby="s3">
       <div class="step"><span class="n">3</span><h2 id="s3">成長トラッキング</h2>
         <div class="seg" role="group" aria-label="評価する日" style="margin:0 0 0 auto"><button data-td="today" aria-pressed="${trackDay==='today'}">今日</button><button data-td="yday" aria-pressed="${trackDay==='yday'}">昨日</button></div></div>
-      <p class="hint">${trackDay==='yday' ? '<b style="color:var(--accent)">昨日の分をつけています。</b>' : ''}○できた　△少しできた　×できなかった<span class="opt">。評価はここでつけ、「習慣」タブでは結果を見られます</span></p>
-      <div>${medTryRow(trackDate())}${S.habits.map(h=>`
+      ${trackDay==='yday' ? '<p class="hint"><b style="color:var(--accent)">昨日の分をつけています。</b></p>' : ''}
+      <div>${wakeRow(trackDate())}${habitsOrdered().map(h=>`
         <div class="habit">
           <span class="name">${esc(h.name)}${areaNote(trackDate(), h.id)}</span>
           ${oxButtons('data-habit', h.id, habitMark(trackDate(), h.id))}
-        </div>${h.id === 'b-sleep' ? wakeRow(trackDate()) : ''}`).join('') || '<p class="muted small">習慣タブで追加できます。</p>'}</div>
-      ${wanderRow()}
-      <h3 style="font-size:.95rem;margin-top:6px">ウィークリータスク</h3>
-      <div>${todayWeeklyRows()}</div>
+        </div>`).join('') || '<p class="muted small">習慣タブで追加できます。</p>'}</div>
+      ${subPanel(trackDate())}
+      <div class="row" style="justify-content:flex-end"><button class="linkbtn" id="wk-go">${weekFor(trackDate()).tasks.length ? 'ウィークリータスクを変える' : 'ウィークリータスクを決める'}</button></div>
     </section>
   </div>`;
 
@@ -646,7 +660,9 @@ function viewTonight(){
   bindEnCopy();
   view.querySelectorAll('[data-habit]').forEach(b => b.onclick = () => { const id = b.dataset.habit, v = b.dataset.v, dt = trackDate(); setHabitMark(dt, id, habitMark(dt, id) === v ? '' : v); viewTonight(); });
   view.querySelectorAll('[data-td]').forEach(b => b.onclick = () => { trackDay = b.dataset.td; viewTonight(); });
-  bindTodayWeekly();
+  const sh = document.getElementById('subhab'); if (sh) sh.ontoggle = () => { subOpen = sh.open; };
+  view.querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { const dt = trackDate(), id = b.dataset.sub; setHabitMark(dt, id, habitMark(dt, id) === 'o' ? '' : 'o'); subOpen = true; viewTonight(); });
+  const wg = document.getElementById('wk-go'); if (wg) wg.onclick = () => { wkView = 'cur'; go('habits'); };
   bindWake(viewTonight);
   view.querySelectorAll('[data-dw]').forEach(b => b.onclick = () => { adjustDayWander(trackDate(), +b.dataset.dw); viewTonight(); });
   if (timer.running) runPhase(0);
@@ -932,7 +948,7 @@ function postTrackPanel(){
   const q = { 'b-sleep':'昨夜の睡眠は？', 'b-meal':'食事は？', 'b-move':'運動は？', 'b-focus':'OBLは？' };
   return `<div class="entry" role="group" aria-label="${label}">
     <p class="entry-h">${label}</p>
-    <div>${ids.map(id => { const h = S.habits.find(x => x.id === id) || BASE_HABITS.find(x => x.id === id); return `<div class="habit"><span class="name">${q[id] || esc(h.name)}${areaNote(p.day, id)}</span>${oxButtons('data-pt', id, habitMark(p.day, id))}</div>${id === 'b-sleep' ? wakeRow(p.day) : ''}`; }).join('')}</div>
+    <div>${ids.includes('b-sleep') ? wakeRow(p.day) : ''}${ids.map(id => { const h = S.habits.find(x => x.id === id) || BASE_HABITS.find(x => x.id === id); return `<div class="habit"><span class="name">${q[id] || esc(h.name)}${areaNote(p.day, id)}</span>${oxButtons('data-pt', id, habitMark(p.day, id))}</div>`; }).join('')}</div>
     <div class="row" style="justify-content:center">${p.all ? '' : '<button class="btn ghost small" id="pt-more">ほかの習慣もつける</button>'}<button class="btn primary" id="pt-done">完了</button></div>
   </div>`;
 }
@@ -1123,8 +1139,9 @@ function adviceFor(){
     if (!nextN){ text = '来週のウィークリータスクを今日のうちに決めておきましょう。月曜の朝、迷わず始められます。'; action = toNext; }
     else { text = `来週のタスクは${nextN}つ準備できています。「もし〜なら」でやるタイミングまで決めておきましょう。`; action = { label:'来週のタスクを見る', fn:() => { wkView = 'next'; go('habits'); } }; }
   } else if (dow === 0){
-    const c = weekTally(cw, weekDays(weekKey()));
-    text = cw.tasks.length ? `今週のウィークリータスクは ○${c.o} △${c.t} ×${c.x}。続いた理由と、続かなかった理由を1つずつジャーナリングに書いてみましょう。` : '今週を軽くふりかえり、来週ためしたいことを1つ決めましょう。';
+    const wd = weekDays(weekKey()), c = { o:0, t:0, x:0 };
+    cw.tasks.filter(t => t.area).forEach(t => wd.forEach(dd => { const m = habitMark(dd, t.area); if (c[m] != null) c[m]++; }));
+    text = cw.tasks.length ? `今週、タスクをつけた習慣は ○${c.o} △${c.t} ×${c.x}。続いた理由と、続かなかった理由を1つずつジャーナリングに書いてみましょう。` : '今週を軽くふりかえり、来週ためしたいことを1つ決めましょう。';
     if (!nextN) action = toNext;
   } else if (!cw.tasks.length){
     text = dow === 1 ? '新しい週です。ウィークリータスクを1つだけ選んで始めましょう。' : 'ウィークリータスクがまだです。1つだけでも選ぶと、毎日の成長トラッキングで手応えが見えます。';
@@ -1133,9 +1150,9 @@ function adviceFor(){
     text = `今週は「${cw.tasks.map(t => t.name.replace(/（.*?）/g,'')).join('」「')}」。最初の1回を今日のうちに。`;
   } else {
     const days = weekDays(weekKey()).filter(dd => dd <= TODAY);
-    const idle = cw.tasks.find(t => !days.some(dd => t.marks[dd] === 'o' || t.marks[dd] === 't'));
+    const idle = cw.tasks.find(t => t.area && !days.some(dd => ['o','t'].includes(habitMark(dd, t.area))));
     const planned = cw.tasks.filter(t => t.when);
-    if (dow === 5 && idle) text = `週の後半です。「${idle.name.replace(/（.*?）/g,'')}」はまだ○がありません。△でいいので一度ためしてみましょう。`;
+    if (dow === 5 && idle) text = `週の後半です。${AREA_NAME[idle.area]}はまだ○がありません。「${idle.name.replace(/（.*?）/g,'')}」を△でいいので一度ためしてみましょう。`;
     else if (planned.length){ const t = planned[b.getDate() % planned.length]; text = `もし${t.when}なら、${t.name.replace(/（.*?）/g,'')}。`; }
     else text = 'ウィークリータスクに「もし〜なら」のタイミングを決めると、実行しやすくなります。';
   }
@@ -1191,7 +1208,7 @@ function viewHabits(){
     ${weeklyPanel()}
     <h3 style="margin-top:4px">毎日の習慣<span class="small muted" style="font-weight:400;margin-left:8px">直近7日</span></h3>
     <section class="panel">
-      <div>${S.habits.map(h=>`
+      <div>${habitsOrdered().map(h=>`
         <div class="hblock">
           <div class="hhead">
             <span class="name">${esc(h.name)}</span>
@@ -1201,15 +1218,14 @@ function viewHabits(){
           ${h.id === 'b-sleep' ? `<div class="week waket">${last7.map(dt => `<span class="mono">${(peek(dt) || {}).wake || '−'}</span>`).join('')}</div>` : ''}
           <div class="row" style="justify-content:flex-end"><button class="linkbtn" data-del="${h.id}">${pendingDelete===h.id?'もう一度押すと削除':'この習慣を削除'}</button></div>
         </div>`).join('')}
-        ${[['morning','朝の瞑想'],['night','夜の瞑想']].map(([slot, nm]) => `<div class="hblock">
-          <div class="hhead"><span class="name">${nm}</span><span class="streak">今週 ${weekDays(weekKey()).filter(dt => medDone(dt, slot)).length}回</span></div>
-          <div class="week">${last7.map(dt => { const dd = new Date(dt+'T00:00'), ok = medDone(dt, slot); return `<span class="cell mk ro ${ok ? 'o' : ''} ${dt===TODAY?'today':''}" role="img" aria-label="${dd.getMonth()+1}月${dd.getDate()}日 ${nm} ${ok ? 'した' : 'なし'}"><span class="w">${dt===TODAY?'今日':WD[dd.getDay()]}</span><span class="n">${ok ? '○' : dd.getDate()}</span></span>`; }).join('')}</div>
-        </div>`).join('')}</div>
+</div>
       <form class="row" id="addh" style="flex-wrap:nowrap">
         <input type="text" id="newh" placeholder="新しい習慣（例：腕立て10回）" maxlength="30">
         <button class="btn primary" style="flex:none">追加</button>
       </form>
     </section>
+    <h3 style="margin-top:4px">ときどき<span class="small muted" style="font-weight:400;margin-left:8px">毎日でなくてOK</span></h3>
+    <section class="panel"><div>${SUB_HABITS.map(h => { const l = lastDone(h.id, TODAY); return `<div class="habit"><span class="name">${h.name}</span><span class="small mono">今月 ${monthCount(h.id, TODAY)}回・${l == null ? '記録なし' : l === 0 ? '今日' : `${l}日前`}</span></div>`; }).join('')}</div></section>
     <p class="muted small">基本の4つ（食事・睡眠・運動・OBL）で十分です。増やすときは「2分でできること」から1つずつ。</p>
   </div>`;
   bindWeekly(viewHabits);
@@ -1307,7 +1323,7 @@ function addWeekTask(name, cid, w){
   w.tasks.push({ id:'w'+Date.now()+Math.floor(Math.random()*1000), cid:cid||null, name, when:'', marks:{}, area: guessArea(cid) });
   save(); return true;
 }
-const guessArea = cid => { const c = cid && CAT_BY_ID[cid] && CAT_BY_ID[cid].cat; return c === '睡眠' ? 'b-sleep' : c === '腸・食事' ? 'b-meal' : null; };
+const guessArea = cid => { const c = cid && CAT_BY_ID[cid] && CAT_BY_ID[cid].cat; return c === '睡眠' ? 'b-sleep' : c === '腸・食事' ? 'b-meal' : c === '自然' ? 's-nat' : c === 'つながり' ? 's-rel' : null; };
 function cycleMark(task, date){
   const m = nextMark(task.marks[date] || '');
   if (m) task.marks[date] = m; else delete task.marks[date];
@@ -1330,14 +1346,12 @@ function weeklyPanel(){
         picking ? `<b>選んでいる途中</b><span>下のリストで「追加」を押して選びます（${w.tasks.length}/${weekMax()}）。終わったら「決定して閉じる」。</span>`
         : w.tasks.length ? `<b>✓ 決定済み（${w.tasks.length}つ）</b><span>このタスクで${wkView==='next'?'来週':'今週'}を進めます。変えたいときは「タスクを変更する」。</span>`
         : `<b>まだ決めていません</b><span>「タスクを選ぶ」から${weekMax()}つまで選べます。まずは1つで十分です。</span>`}</div>
-      <p class="hint">タスクは食事・睡眠・運動の「中身」として決めます。タスクがない週も、食事・睡眠・運動の○△×はいつもどおりつけます。</p>
+      <p class="hint">タスクは食事・睡眠・運動の「中身」です。タスク自体の評価はつけず、成長トラッキングの食事・睡眠・運動の○△×で見ます。タスクがない週も、○△×はいつもどおりつけます。</p>
       ${w.tasks.length ? w.tasks.map(t => {
-        const cnt = v => days.filter(dd => t.marks[dd]===v).length;
         return `<div class="wtask">
-          <div class="hhead"><span class="name">${esc(t.name)}</span><span class="streak">○${cnt('o')} △${cnt('t')} ×${cnt('x')}</span></div>
+          <div class="hhead"><span class="name">${esc(t.name)}</span></div>
           <div class="row arearow"><span class="small muted">どの習慣の中身？</span><div class="seg" role="group" aria-label="どの習慣の中身か">${AREAS.concat([['','なし']]).map(([k,l]) => `<button data-warea="${t.id}" data-a="${k}" aria-pressed="${(t.area||'')===k}">${l}</button>`).join('')}</div></div>
           <label class="whenrow"><span>もし</span><input type="text" data-when="${t.id}" placeholder="例：昼休みに外へ出たら" value="${esc(t.when)}"></label>
-          <div class="week">${days.map(dd => { const dt = new Date(dd+'T12:00'), m = t.marks[dd]||''; return `<span class="cell mk ro ${m} ${dd===TODAY?'today':''}" role="img" aria-label="${dt.getMonth()+1}月${dt.getDate()}日 ${esc(t.name)} ${MARK_LABEL[m]||'未記入'}"><span class="w">${dd===TODAY?'今日':WD[dt.getDay()]}</span><span class="n">${MARK[m]||dt.getDate()}</span></span>`; }).join('')}</div>
           <div class="row" style="justify-content:flex-end"><button class="linkbtn" data-wdel="${t.id}">${pendingDelete===t.id?'もう一度押すと外す':'ウィークリータスクから外す'}</button></div>
         </div>`; }).join('')
       : `<div class="empty"><p>迷ったら「知識」タブの★印の項目から選ぶのがおすすめです。</p>
@@ -1641,7 +1655,8 @@ function habitYearPanel(){
   const y = hyYear || base().getFullYear();
   const dim = m => new Date(y, m + 1, 0).getDate();
   const MEDY = [{ id:'med-m', name:'朝の瞑想', mk: k => medDone(k,'morning') ? 'o' : '' }, { id:'med-n', name:'夜の瞑想', mk: k => medDone(k,'night') ? 'o' : '' }];
-  const tables = BASE_HABITS.concat(MEDY).map(bh => {
+  const SUBY = SUB_HABITS.map(h => ({ id:h.id, name:h.name, mk: k => habitMark(k, h.id) === 'o' ? 'o' : '' }));
+  const tables = BASE_HABITS.concat(MEDY, SUBY).map(bh => {
     const h = S.habits.find(x => x.id === bh.id) || bh;
     const tot = { o:0, t:0, x:0, r:0 }, mo = Array(12).fill(0);
     let rows = '';
