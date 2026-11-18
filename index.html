@@ -213,6 +213,11 @@ details.catg summary::-webkit-details-marker{display:none}
 .stp b{font-size:1.1rem;font-weight:500;white-space:nowrap}
 .stp b small{font-size:.65rem;color:var(--muted);margin-left:1px}
 button:disabled{opacity:.45;cursor:default}
+.medtry .mtags{display:flex;gap:6px}.mtag{padding:4px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:.9rem}.mtag.on{background:var(--good);border-color:var(--good);color:var(--bg);font-weight:700}
+.wakeedit{display:flex;gap:6px;align-items:center}.wakeedit input{width:auto;padding:6px 8px}
+.atag{font-size:.72rem;padding:1px 7px;margin-right:6px;border-radius:999px;background:var(--accent);color:var(--accent-ink);vertical-align:1px}
+.arearow{align-items:center;gap:8px}.arearow .seg{margin-top:0}
+.waket span{text-align:center;font-size:.72rem;color:var(--muted)}
 .modesel{display:flex;flex-direction:column;gap:8px}
 .seg.big{display:flex;width:100%;border-radius:14px;margin-top:0}.seg.big button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;font-size:1rem}.seg.big small{font-size:.72rem;opacity:.7}
 .tappad.jihi{cursor:default}.tappad.jihi .mantra{font-size:1.35rem;min-height:4em;color:var(--ink,inherit);opacity:1}
@@ -271,7 +276,7 @@ button:disabled{opacity:.45;cursor:default}
 .tappad .breath{height:240px;width:100%}
 .tappad .ring,.tappad .orb,.tappad .breath-label{display:block}
 .padclock{position:absolute;left:16px;top:12px;font-size:.85rem;color:var(--muted);opacity:.5}
-.tapcount{position:absolute;right:16px;bottom:12px;font-size:.8rem;color:var(--muted);opacity:.45}
+.tapcount{font-size:5rem;font-weight:300;color:var(--muted);opacity:.35;line-height:1}
 .medctl{justify-content:space-between}
 body.med-on header.top{display:none}
 body.med-on .app{padding-block-start:8px}
@@ -424,7 +429,7 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
 <label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script>
-const APP_VERSION = 'v46', APP_UPDATED = '2026/11/18';
+const APP_VERSION = 'v48', APP_UPDATED = '2026/11/18';
 const KEY = 'yoru-note-v1';
 const pad = n => String(n).padStart(2,'0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -439,6 +444,24 @@ const MOODS = ['ぐったり','いまいち','ふつう','まずまず','いい�
 
 /* ---------- data ---------- */
 const BASE_HABITS = [ {id:'b-meal', name:'食事'}, {id:'b-sleep', name:'睡眠'}, {id:'b-move', name:'運動'}, {id:'b-focus', name:'OBL'} ];
+const AREAS = [['b-meal','食事'],['b-sleep','睡眠'],['b-move','運動']];
+const AREA_NAME = Object.fromEntries(AREAS);
+const medDone = (dt, slot) => ((peek(dt) || {}).sessions || []).some(x => x.slot === slot);
+function medTryRow(dt){
+  const days = weekDays(weekKey(new Date(dt+'T12:00'))).filter(x => x <= dt), n = days.length;
+  const cm = days.filter(x => medDone(x,'morning')).length, cn = days.filter(x => medDone(x,'night')).length;
+  const tag = (slot, l) => `<span class="mtag ${medDone(dt, slot) ? 'on' : ''}">${l} ${medDone(dt, slot) ? '✓' : '−'}</span>`;
+  return `<div class="habit medtry"><span class="name">瞑想<span class="wwhen">今週 朝 ${cm}/${n}・夜 ${cn}/${n}</span></span><span class="mtags">${tag('morning','朝')}${tag('night','夜')}</span></div>`;
+}
+function wakeRow(dt){
+  const w = (peek(dt) || {}).wake || '';
+  return `<div class="habit wake"><span class="name">起きた時間</span><span class="wakeedit"><input type="time" data-wake="${dt}" value="${w}" aria-label="起きた時間"><button class="btn small" data-wakenow="${dt}">今</button></span></div>`;
+}
+function bindWake(rerender){
+  view.querySelectorAll('[data-wake]').forEach(i => i.onchange = () => { const d = day(i.dataset.wake); if (i.value) d.wake = i.value; else delete d.wake; save(); toast(i.value ? `起きた時間 ${i.value} を記録しました` : '起きた時間を消しました'); });
+  view.querySelectorAll('[data-wakenow]').forEach(b => b.onclick = () => { const n = new Date(); day(b.dataset.wakenow).wake = `${pad(n.getHours())}:${pad(n.getMinutes())}`; save(); toast(`起きた時間 ${day(b.dataset.wakenow).wake} を記録しました`); rerender(); });
+}
+function areaNote(dt, hid){ const ts = weekFor(dt).tasks.filter(t => t.area === hid); return ts.map(t => `<span class="wwhen">今週：${esc(t.name)}</span>`).join(''); }
 function seed(){
   let r = 7; const rnd = () => (r = (r*16807) % 2147483647) / 2147483647;
   const habits = BASE_HABITS.map(h => ({...h}));
@@ -549,7 +572,6 @@ function viewTonight(){
       ${timer.running && medMode() === 'jihi' ? `
       <div class="row medctl"><button class="btn" id="tend">瞑想を終える</button></div>
       <div class="tappad jihi" aria-label="慈悲の瞑想中">
-        <span class="breath" aria-hidden="true"><span class="ring"></span><span class="orb" id="orb"></span><span class="breath-label" id="blabel"></span></span>
         ${curMantras().length ? `<span class="mantra" id="mantra" aria-live="polite"></span>` : ''}
         ${S.settings.iosTimer ? '' : `<span class="padclock mono" id="clock" aria-hidden="true">${fmt(timer.left)}</span>`}
       </div>` : timer.running ? `
@@ -558,12 +580,9 @@ function viewTonight(){
         <button class="btn" id="tend">瞑想を終える</button>
       </div>
       <button class="tappad" id="tappad" aria-label="考えごとに気づいて呼吸に戻ったらタップ">
-        <span class="breath" aria-hidden="true"><span class="ring"></span><span class="orb" id="orb"></span><span class="breath-label" id="blabel"></span></span>
-        ${S.settings.mantraOn !== false && activeMantras().length ? `<span class="mantra" id="mantra" aria-live="polite"></span>` : ''}
         <span class="tapcount mono" id="wcount" aria-hidden="true">${timer.wander||0}</span>
         ${S.settings.iosTimer ? '' : `<span class="padclock mono" id="clock" aria-hidden="true">${fmt(timer.left)}</span>`}
       </button>` : pendingSession() ? pendingEntryPanel() : postTrack ? postTrackPanel() : `
-      <div class="breath"><div class="ring"></div><div class="orb" id="orb"></div><div class="breath-label" id="blabel"></div></div>
       ${mantraVisible() ? `<p class="mantra" id="mantra">${esc(curMantras()[0].text)}</p>` : ''}`}
       ${timer.running ? '' : todaySessions(d)}
     </section>
@@ -590,11 +609,11 @@ function viewTonight(){
       <div class="step"><span class="n">3</span><h2 id="s3">成長トラッキング</h2>
         <div class="seg" role="group" aria-label="評価する日" style="margin:0 0 0 auto"><button data-td="today" aria-pressed="${trackDay==='today'}">今日</button><button data-td="yday" aria-pressed="${trackDay==='yday'}">昨日</button></div></div>
       <p class="hint">${trackDay==='yday' ? '<b style="color:var(--accent)">昨日の分をつけています。</b>' : ''}○できた　△少しできた　×できなかった<span class="opt">。評価はここでつけ、「習慣」タブでは結果を見られます</span></p>
-      <div>${S.habits.map(h=>`
+      <div>${medTryRow(trackDate())}${S.habits.map(h=>`
         <div class="habit">
-          <span class="name">${esc(h.name)}</span>
+          <span class="name">${esc(h.name)}${areaNote(trackDate(), h.id)}</span>
           ${oxButtons('data-habit', h.id, habitMark(trackDate(), h.id))}
-        </div>`).join('') || '<p class="muted small">習慣タブで追加できます。</p>'}</div>
+        </div>${h.id === 'b-sleep' ? wakeRow(trackDate()) : ''}`).join('') || '<p class="muted small">習慣タブで追加できます。</p>'}</div>
       ${wanderRow()}
       <h3 style="font-size:.95rem;margin-top:6px">ウィークリータスク</h3>
       <div>${todayWeeklyRows()}</div>
@@ -628,6 +647,7 @@ function viewTonight(){
   view.querySelectorAll('[data-habit]').forEach(b => b.onclick = () => { const id = b.dataset.habit, v = b.dataset.v, dt = trackDate(); setHabitMark(dt, id, habitMark(dt, id) === v ? '' : v); viewTonight(); });
   view.querySelectorAll('[data-td]').forEach(b => b.onclick = () => { trackDay = b.dataset.td; viewTonight(); });
   bindTodayWeekly();
+  bindWake(viewTonight);
   view.querySelectorAll('[data-dw]').forEach(b => b.onclick = () => { adjustDayWander(trackDate(), +b.dataset.dw); viewTonight(); });
   if (timer.running) runPhase(0);
 }
@@ -678,7 +698,7 @@ function curMantras(){
   if (medMode() === 'jihi'){ const k = S.settings.jihiCat, a = k ? mantras().filter(m => m.cat === k) : []; return a.length ? a : activeMantras(); }
   return activeMantras();
 }
-const mantraVisible = () => curMantras().length > 0 && (medMode() === 'jihi' || S.settings.mantraOn !== false);
+const mantraVisible = () => medMode() === 'jihi' && curMantras().length > 0;
 function modeSelector(){
   const m = medMode(), cats = allCats().filter(c => mantras().some(x => x.cat === c.key)), jc = S.settings.jihiCat && cats.some(c => c.key === S.settings.jihiCat) ? S.settings.jihiCat : '';
   return `<div class="modesel">
@@ -699,8 +719,7 @@ function showMantra(text){
 function mantraSettings(){
   const ms = mantras(), on = S.settings.mantraOn !== false, n = ms.filter(m => m.on).length;
   return `<details class="mset" ${mantraEdit?'open':''} id="mset">
-    <summary><span>マントラ</span><span class="small muted">${on ? `${[...new Set(ms.filter(m => m.on).map(m => catOf(m.cat).name))].join('・') || 'なし'}・${n}個` : 'オフ'}</span></summary>
-    <div class="setrow"><label for="mt-on">瞑想中にマントラを表示</label><input type="checkbox" id="mt-on" switch ${on?'checked':''}></div>
+    <summary><span>マントラ（慈悲の瞑想）</span><span class="small muted">${true ? `${[...new Set(ms.filter(m => m.on).map(m => catOf(m.cat).name))].join('・') || 'なし'}・${n}個` : 'オフ'}</span></summary>
     <div class="setrow"><span class="small">順番</span><div class="seg" role="group" aria-label="順番"><button data-mo="seq" aria-pressed="${S.settings.mantraOrder!=='rand'}">上から順に</button><button data-mo="rand" aria-pressed="${S.settings.mantraOrder==='rand'}">ランダム</button></div></div>
     <p class="hint">使う言葉にチェックを入れます。吸い始めるたびに、次の言葉に切り替わります。カテゴリー名のボタンで、そのカテゴリーだけを使うように一度に切り替えられます。</p>
     <div class="row" role="group" aria-label="カテゴリーで選ぶ">${allCats().map(c => { const items = ms.filter(m => m.cat === c.key), onN = items.filter(m => m.on).length; return items.length ? `<button class="chip sm" data-mcat="${c.key}" aria-pressed="${onN === items.length && onN === n}">${c.name}だけ</button>` : ''; }).join('')}</div>
@@ -725,7 +744,6 @@ function mantraSettings(){
 function bindMantra(){
   const d = document.getElementById('mset'); if (!d) return;
   d.ontoggle = () => { mantraEdit = d.open; };
-  document.getElementById('mt-on').onchange = e => { S.settings.mantraOn = e.target.checked; save(); VIEWS[current](); };
   view.querySelectorAll('[data-mo]').forEach(b => b.onclick = () => { S.settings.mantraOrder = b.dataset.mo; mantraIdx = -1; save(); VIEWS[current](); });
   view.querySelectorAll('[data-mon]').forEach(c => c.onchange = () => { const m = mantras().find(x => x.id === c.dataset.mon); if (m){ m.on = c.checked; mantraIdx = -1; save(); VIEWS[current](); } });
   view.querySelectorAll('[data-mcat]').forEach(b => b.onclick = () => { const k = b.dataset.mcat; mantras().forEach(m => m.on = m.cat === k); mantraIdx = -1; save(); toast(`「${catOf(k).name}」だけを使います`); VIEWS[current](); });
@@ -783,7 +801,7 @@ function todaySessions(d){
   const ss = (d && d.sessions) || [];
   if (!ss.length) return '';
   const lab = Object.fromEntries(SLOTS);
-  return `<div class="sesslist"><span class="eyebrow">今日の瞑想　戻りの回数はあとから直せます</span>${ss.map((x,i) => `<div class="sess edit"><span class="mono">${pad(new Date(x.at).getHours())}:${pad(new Date(x.at).getMinutes())}</span><span>${lab[x.slot]||''}</span><span class="mono">${x.min}分</span><span class="mono">${patLabel(x.pat)}</span>${isJihi(x) ? '<span class="jtag">慈悲</span>' : `<span class="wedit"><button data-sw="${i}" data-dv="-1" aria-label="戻りの回数を1回減らす">−</button><b class="mono">${x.wander}</b><button data-sw="${i}" data-dv="1" aria-label="戻りの回数を1回増やす">＋</button></span>`}</div>`).join('')}</div>`;
+  return `<div class="sesslist"><span class="eyebrow">今日の瞑想　戻りの回数はあとから直せます</span>${ss.map((x,i) => `<div class="sess edit"><span class="mono">${pad(new Date(x.at).getHours())}:${pad(new Date(x.at).getMinutes())}</span><span>${lab[x.slot]||''}</span><span class="mono">${x.min}分</span>${isJihi(x) ? '<span class="jtag">慈悲</span>' : `<span class="wedit"><button data-sw="${i}" data-dv="-1" aria-label="戻りの回数を1回減らす">−</button><b class="mono">${x.wander}</b><button data-sw="${i}" data-dv="1" aria-label="戻りの回数を1回増やす">＋</button></span>`}</div>`).join('')}</div>`;
 }
 function bindBreath(){
   view.querySelectorAll('[data-bp]').forEach(b => b.onclick = () => { const [i,h,e] = b.dataset.bp.split('-').map(Number); S.settings.breath = {i,h,e}; save(); viewTonight(); });
@@ -875,13 +893,9 @@ async function toggleTimer(){
 }
 function runPhase(i){
   clearTimeout(timer.phaseT);
-  const orb = document.getElementById('orb'), lab = document.getElementById('blabel');
-  if (!orb || !timer.running) return;
-  const ph = phases(); const [name, sec, scale] = ph[i % ph.length];
-  if (i % ph.length === 0 && mantraVisible()) showMantra(nextMantra());
-  orb.style.transitionDuration = sec + 's';
-  orb.style.transform = `scale(${scale})`;
-  lab.textContent = name;
+  if (!timer.running || !mantraVisible()) return;
+  const ph = phases(); const [, sec] = ph[i % ph.length];
+  if (i % ph.length === 0) showMantra(nextMantra());
   timer.phaseT = setTimeout(() => runPhase(i+1), sec*1000);
 }
 function stopTimer(){
@@ -918,7 +932,7 @@ function postTrackPanel(){
   const q = { 'b-sleep':'昨夜の睡眠は？', 'b-meal':'食事は？', 'b-move':'運動は？', 'b-focus':'OBLは？' };
   return `<div class="entry" role="group" aria-label="${label}">
     <p class="entry-h">${label}</p>
-    <div>${ids.map(id => { const h = S.habits.find(x => x.id === id) || BASE_HABITS.find(x => x.id === id); return `<div class="habit"><span class="name">${q[id] || esc(h.name)}</span>${oxButtons('data-pt', id, habitMark(p.day, id))}</div>`; }).join('')}</div>
+    <div>${ids.map(id => { const h = S.habits.find(x => x.id === id) || BASE_HABITS.find(x => x.id === id); return `<div class="habit"><span class="name">${q[id] || esc(h.name)}${areaNote(p.day, id)}</span>${oxButtons('data-pt', id, habitMark(p.day, id))}</div>${id === 'b-sleep' ? wakeRow(p.day) : ''}`; }).join('')}</div>
     <div class="row" style="justify-content:center">${p.all ? '' : '<button class="btn ghost small" id="pt-more">ほかの習慣もつける</button>'}<button class="btn primary" id="pt-done">完了</button></div>
   </div>`;
 }
@@ -1184,7 +1198,12 @@ function viewHabits(){
             <span class="streak">今週 ○△ ${weekDays(weekKey()).filter(dt => ['o','t'].includes(habitMark(dt, h.id))).length}日</span>
           </div>
           <div class="week">${last7.map(dt=>{const dd=new Date(dt+'T00:00'),m=habitMark(dt,h.id);return `<span class="cell mk ro ${m} ${dt===TODAY?'today':''}" role="img" aria-label="${dd.getMonth()+1}月${dd.getDate()}日 ${esc(h.name)} ${MARK_LABEL[m]||'未記入'}"><span class="w">${dt===TODAY?'今日':WD[dd.getDay()]}</span><span class="n">${MARK[m]||dd.getDate()}</span></span>`}).join('')}</div>
+          ${h.id === 'b-sleep' ? `<div class="week waket">${last7.map(dt => `<span class="mono">${(peek(dt) || {}).wake || '−'}</span>`).join('')}</div>` : ''}
           <div class="row" style="justify-content:flex-end"><button class="linkbtn" data-del="${h.id}">${pendingDelete===h.id?'もう一度押すと削除':'この習慣を削除'}</button></div>
+        </div>`).join('')}
+        ${[['morning','朝の瞑想'],['night','夜の瞑想']].map(([slot, nm]) => `<div class="hblock">
+          <div class="hhead"><span class="name">${nm}</span><span class="streak">今週 ${weekDays(weekKey()).filter(dt => medDone(dt, slot)).length}回</span></div>
+          <div class="week">${last7.map(dt => { const dd = new Date(dt+'T00:00'), ok = medDone(dt, slot); return `<span class="cell mk ro ${ok ? 'o' : ''} ${dt===TODAY?'today':''}" role="img" aria-label="${dd.getMonth()+1}月${dd.getDate()}日 ${nm} ${ok ? 'した' : 'なし'}"><span class="w">${dt===TODAY?'今日':WD[dd.getDay()]}</span><span class="n">${ok ? '○' : dd.getDate()}</span></span>`; }).join('')}</div>
         </div>`).join('')}</div>
       <form class="row" id="addh" style="flex-wrap:nowrap">
         <input type="text" id="newh" placeholder="新しい習慣（例：腕立て10回）" maxlength="30">
@@ -1267,7 +1286,7 @@ const CATALOG = [
 ];
 const CAT_BY_ID = {}; CATALOG.forEach(c => c.items.forEach(([id,name]) => CAT_BY_ID[id] = { name, cat:c.cat }));
 const DEFAULT_CAT_STARS = ['g1','g3','c1','c2','c3','c4','c5'];
-const WEEK_MAX_FULL = 5, WEEK_MAX_SIMPLE = 2;
+const WEEK_MAX_FULL = 2, WEEK_MAX_SIMPLE = 2;
 const isSimple = () => S.settings.simple !== false;
 const weekMax = () => isSimple() ? WEEK_MAX_SIMPLE : WEEK_MAX_FULL;
 let picking = false, wkView = 'cur';
@@ -1285,9 +1304,10 @@ function addWeekTask(name, cid, w){
   w = w || viewWeek();
   if (cid && w.tasks.some(t => t.cid === cid)){ toast('すでにウィークリータスクに入っています'); return false; }
   if (w.tasks.length >= weekMax()){ toast(`ウィークリータスクは${weekMax()}つまでです`); return false; }
-  w.tasks.push({ id:'w'+Date.now()+Math.floor(Math.random()*1000), cid:cid||null, name, when:'', marks:{} });
+  w.tasks.push({ id:'w'+Date.now()+Math.floor(Math.random()*1000), cid:cid||null, name, when:'', marks:{}, area: guessArea(cid) });
   save(); return true;
 }
+const guessArea = cid => { const c = cid && CAT_BY_ID[cid] && CAT_BY_ID[cid].cat; return c === '睡眠' ? 'b-sleep' : c === '腸・食事' ? 'b-meal' : null; };
 function cycleMark(task, date){
   const m = nextMark(task.marks[date] || '');
   if (m) task.marks[date] = m; else delete task.marks[date];
@@ -1310,11 +1330,12 @@ function weeklyPanel(){
         picking ? `<b>選んでいる途中</b><span>下のリストで「追加」を押して選びます（${w.tasks.length}/${weekMax()}）。終わったら「決定して閉じる」。</span>`
         : w.tasks.length ? `<b>✓ 決定済み（${w.tasks.length}つ）</b><span>このタスクで${wkView==='next'?'来週':'今週'}を進めます。変えたいときは「タスクを変更する」。</span>`
         : `<b>まだ決めていません</b><span>「タスクを選ぶ」から${weekMax()}つまで選べます。まずは1つで十分です。</span>`}</div>
-      <p class="hint">「もし〜なら」でやるタイミングを決めます。毎日の○△×は「今日」タブでつけます。</p>
+      <p class="hint">タスクは食事・睡眠・運動の「中身」として決めます。タスクがない週も、食事・睡眠・運動の○△×はいつもどおりつけます。</p>
       ${w.tasks.length ? w.tasks.map(t => {
         const cnt = v => days.filter(dd => t.marks[dd]===v).length;
         return `<div class="wtask">
           <div class="hhead"><span class="name">${esc(t.name)}</span><span class="streak">○${cnt('o')} △${cnt('t')} ×${cnt('x')}</span></div>
+          <div class="row arearow"><span class="small muted">どの習慣の中身？</span><div class="seg" role="group" aria-label="どの習慣の中身か">${AREAS.concat([['','なし']]).map(([k,l]) => `<button data-warea="${t.id}" data-a="${k}" aria-pressed="${(t.area||'')===k}">${l}</button>`).join('')}</div></div>
           <label class="whenrow"><span>もし</span><input type="text" data-when="${t.id}" placeholder="例：昼休みに外へ出たら" value="${esc(t.when)}"></label>
           <div class="week">${days.map(dd => { const dt = new Date(dd+'T12:00'), m = t.marks[dd]||''; return `<span class="cell mk ro ${m} ${dd===TODAY?'today':''}" role="img" aria-label="${dt.getMonth()+1}月${dt.getDate()}日 ${esc(t.name)} ${MARK_LABEL[m]||'未記入'}"><span class="w">${dd===TODAY?'今日':WD[dt.getDay()]}</span><span class="n">${MARK[m]||dt.getDate()}</span></span>`; }).join('')}</div>
           <div class="row" style="justify-content:flex-end"><button class="linkbtn" data-wdel="${t.id}">${pendingDelete===t.id?'もう一度押すと外す':'ウィークリータスクから外す'}</button></div>
@@ -1352,9 +1373,10 @@ function bindWeekly(rerender){
   const carry = document.getElementById('wk-carry');
   if (carry) carry.onclick = () => {
     const prev = S.weeks[ymd(addDays(new Date(viewKey()+'T12:00'), -7))];
-    w.tasks = prev.tasks.map(t => ({ id:'w'+Date.now()+Math.floor(Math.random()*1e4), cid:t.cid, name:t.name, when:t.when, marks:{} }));
+    w.tasks = prev.tasks.map(t => ({ id:'w'+Date.now()+Math.floor(Math.random()*1e4), cid:t.cid, name:t.name, when:t.when, marks:{}, area:t.area || null }));
     save(); toast('タスクを引き継ぎました'); rerender();
   };
+  view.querySelectorAll('[data-warea]').forEach(b => b.onclick = () => { const t = find(b.dataset.warea); if (t){ t.area = b.dataset.a || null; save(); toast(t.area ? `「${AREA_NAME[t.area]}」の中身にしました` : '習慣とのひもづけを外しました'); rerender(); } });
   view.querySelectorAll('[data-when]').forEach(i => i.onchange = () => { const t = find(i.dataset.when); if (t){ t.when = i.value.trim(); save(); toast('タイミングを保存しました'); } });
   view.querySelectorAll('[data-wdel]').forEach(b => b.onclick = () => {
     const id = b.dataset.wdel;
@@ -1378,7 +1400,7 @@ function todayWeeklyRows(){
   const dt = trackDate(), w = weekFor(dt);
   if (!w.tasks.length) return `<p class="muted small">ウィークリータスクは「習慣」タブで選べます。</p>`;
   return w.tasks.map(t => { const m = t.marks[dt]||''; return `<div class="habit">
-      <span class="name">${esc(t.name)}${t.when?`<span class="wwhen">もし${esc(t.when)}</span>`:''}</span>
+      <span class="name">${t.area ? `<span class="atag">${AREA_NAME[t.area]}</span>` : ''}${esc(t.name)}${t.when?`<span class="wwhen">もし${esc(t.when)}</span>`:''}</span>
       ${oxButtons('data-ox', t.id, m)}
     </div>`; }).join('');
 }
@@ -1559,18 +1581,6 @@ function viewLife(){
       <h3>設定</h3>
       <div class="setrow"><label for="simple-on">シンプルモード</label><input type="checkbox" id="simple-on" switch ${isSimple()?'checked':''}></div>
       <p class="small muted">オンにすると、「今日」タブは毎日やることだけになります。アドバイスは土日だけ、説明文は最小限、ウィークリータスクは2つまでになります。</p>
-      ${(() => { const b = breath(), p = BREATH_PRESETS.find(x => x.i===b.i && x.h===b.h && x.e===b.e), lock = timer.running ? 'disabled' : '';
-        const opt = (k, min) => [...Array(13 - min)].map((_, j) => j + min).map(v => `<option value="${v}" ${b[k]===v?'selected':''}>${v}秒</option>`).join('');
-        return `<details class="mset" id="bset2">
-        <summary><span>呼吸の秒数</span><span class="small muted mono">${patLabel(b)}${p ? '（' + p.name + '）' : ''}</span></summary>
-        <div class="bcompact">
-          <label>吸う<select data-sel="i" ${lock}>${opt('i',2)}</select></label>
-          <label>止める<select data-sel="h" ${lock}>${opt('h',0)}</select></label>
-          <label>吐く<select data-sel="e" ${lock}>${opt('e',2)}</select></label>
-        </div>
-        <label class="bpreset">よく使う組み合わせ<select id="bpreset" ${lock}><option value="">選ぶ…</option>${BREATH_PRESETS.map(x => `<option value="${x.i}-${x.h}-${x.e}">${x.name}（${x.i}-${x.h}-${x.e}）</option>`).join('')}</select></label>
-        <p class="small muted">1サイクル ${b.i + b.h + b.e}秒・1分あたり約${(60 / (b.i + b.h + b.e)).toFixed(1)}回。止めるを0秒にすると飛ばします。</p>
-      </details>`; })()}
       ${mantraSettings()}
       <p class="small muted">瞑想中は、考えごとに気づいて呼吸に戻るたびに「呼吸に戻った」を押します。押し忘れた分は、終わったあと「今日」タブの一覧で直せます。時間帯（朝・昼・夜）は時刻から自動で記録します。</p>
       <div class="setrow">
@@ -1630,7 +1640,8 @@ let hyYear = null;
 function habitYearPanel(){
   const y = hyYear || base().getFullYear();
   const dim = m => new Date(y, m + 1, 0).getDate();
-  const tables = BASE_HABITS.map(bh => {
+  const MEDY = [{ id:'med-m', name:'朝の瞑想', mk: k => medDone(k,'morning') ? 'o' : '' }, { id:'med-n', name:'夜の瞑想', mk: k => medDone(k,'night') ? 'o' : '' }];
+  const tables = BASE_HABITS.concat(MEDY).map(bh => {
     const h = S.habits.find(x => x.id === bh.id) || bh;
     const tot = { o:0, t:0, x:0, r:0 }, mo = Array(12).fill(0);
     let rows = '';
@@ -1638,14 +1649,14 @@ function habitYearPanel(){
       let tds = '';
       for (let m = 0; m < 12; m++){
         if (d > dim(m)){ tds += '<td class="na"></td>'; continue; }
-        const k = `${y}-${pad(m+1)}-${pad(d)}`, mk = k > TODAY ? '' : habitMark(k, bh.id);
+        const k = `${y}-${pad(m+1)}-${pad(d)}`, mk = k > TODAY ? '' : bh.mk ? bh.mk(k) : habitMark(k, bh.id);
         if (mk){ tot[mk]++; if (mk === 'o' || mk === 't') mo[m]++; }
         tds += `<td class="${mk}${k === TODAY ? ' now' : ''}">${MARK[mk] || ''}</td>`;
       }
       rows += `<tr><th>${d}</th>${tds}</tr>`;
     }
     return `<div class="ytab">
-      <div class="ytab-h"><b>${esc(h.name)}</b><span class="mono">○${tot.o}${bh.id === 'b-focus' && !tot.t ? '' : ` △${tot.t}`} ×${tot.x}${bh.id === 'b-focus' ? ` 休${tot.r}` : ''}</span></div>
+      <div class="ytab-h"><b>${esc(h.name)}</b><span class="mono">${bh.mk ? `${tot.o}回` : `○${tot.o}${bh.id === 'b-focus' && !tot.t ? '' : ` △${tot.t}`} ×${tot.x}${bh.id === 'b-focus' ? ` 休${tot.r}` : ''}`}</span></div>
       <table><thead><tr><th>日</th>${[...Array(12)].map((_,m) => `<th>${m+1}月</th>`).join('')}</tr></thead>
       <tbody>${rows}</tbody>
       <tfoot><tr><th>○△</th>${mo.map(v => `<td>${v || ''}</td>`).join('')}</tr></tfoot></table>
@@ -1723,9 +1734,8 @@ function medStatsPanel(){
     <div class="row" style="justify-content:space-between"><h3>瞑想のバリエーション</h3><span class="small muted">呼吸瞑想 全${all.length}回</span></div>
     ${jihiLine}
     ${wanderTrend(all)}
-    ${table('呼吸（吸-止-吐）', group(x => patLabel(x.pat)), k => k)}
     ${table('時間帯', group(x => x.slot), k => lab[k] || k)}
-    <div class="sesslist"><span class="eyebrow">最近の5回</span>${recent.map(x => `<div class="sess"><span class="mono">${x.date.slice(5).replace('-','/')}</span><span>${lab[x.slot]||''}</span><span class="mono">${x.min}分</span><span class="mono">${patLabel(x.pat)}</span><span>戻り <b class="mono">${x.wander}</b></span></div>`).join('')}</div>
+    <div class="sesslist"><span class="eyebrow">最近の5回</span>${recent.map(x => `<div class="sess"><span class="mono">${x.date.slice(5).replace('-','/')}</span><span>${lab[x.slot]||''}</span><span class="mono">${x.min}分</span><span>戻り <b class="mono">${x.wander}</b></span></div>`).join('')}</div>
     <p class="hint">戻りの回数は、考えごとに気づいて呼吸に戻れた回数です。少ないほど良いとは限らないので、同じ条件で続けたときの変化を見ます。</p>
   </section>`;
 }
