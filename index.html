@@ -165,6 +165,7 @@ textarea.fade{opacity:0;transition:opacity .6s}
 .cell.mk.o .n,.cell.mk.o .w{color:var(--bg)}
 .cell.mk.t{background:var(--accent);border-color:var(--accent)}
 .cell.mk.t .n,.cell.mk.t .w{color:var(--accent-ink);font-weight:500}
+.cell.mk.r{border-style:dashed}.cell.mk.r .n{color:var(--muted)}
 .cell.mk.x{background:var(--bad);border-color:var(--bad)}
 .cell.mk.x .n,.cell.mk.x .w{color:var(--bg);font-weight:500}
 .empty{display:flex;flex-direction:column;gap:10px;align-items:flex-start;padding:14px;border:1px dashed var(--line);border-radius:12px;font-size:.88rem;color:var(--muted)}
@@ -180,6 +181,9 @@ details.catg summary::-webkit-details-marker{display:none}
 .oxb{width:40px;height:36px;border-radius:10px;border:1.5px solid var(--line);background:transparent;font-size:1.05rem;color:var(--muted)}
 .oxb.on.o{background:var(--good);border-color:var(--good);color:var(--bg)}
 .oxb.on.t{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.oxb.on.r{background:var(--muted);border-color:var(--muted);color:var(--bg);font-size:.9rem;font-weight:700}
+.oxb[data-v="r"]{font-size:.9rem}
+.ytab td.r{color:var(--muted)}
 .oxb.on.x{background:var(--bad);border-color:var(--bad);color:var(--bg);font-weight:700}
 .oxb.on{transform:scale(1.06)}
 .ox:has(.on) .oxb:not(.on){opacity:.45}
@@ -420,7 +424,7 @@ svg.spark text{fill:var(--muted);font-family:var(--mono);font-size:9px}
 <label id="hap" class="vh" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script>
-const APP_VERSION = 'v45', APP_UPDATED = '2026/11/17';
+const APP_VERSION = 'v46', APP_UPDATED = '2026/11/18';
 const KEY = 'yoru-note-v1';
 const pad = n => String(n).padStart(2,'0');
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -1142,10 +1146,11 @@ function trackDate(){ return trackDay === 'yday' ? ymd(addDays(base(), -1)) : TO
 function weekFor(date){ return weekOf(weekKey(new Date(date+'T12:00'))); }
 
 /* ---------- ○△× ---------- */
-const MARK = { o:'○', t:'△', x:'×' };
-const MARK_LABEL = { o:'できた', t:'少しできた', x:'できなかった' };
+const MARK = { o:'○', t:'△', x:'×', r:'休' };
+const MARK_LABEL = { o:'できた', t:'少しできた', x:'できなかった', r:'休み' };
+const markSet = (id, m) => id === 'b-focus' ? (m === 't' ? ['o','t','x','r'] : ['o','x','r']) : ['o','t','x'];
 function oxButtons(attr, id, m){
-  return `<div class="ox">${['o','t','x'].map(v => `<button class="oxb ${m===v?'on '+v:''}" ${attr}="${id}" data-v="${v}" aria-pressed="${m===v}" aria-label="${MARK_LABEL[v]}">${MARK[v]}</button>`).join('')}</div>`;
+  return `<div class="ox">${markSet(id, m).map(v => `<button class="oxb ${m===v?'on '+v:''}" ${attr}="${id}" data-v="${v}" aria-pressed="${m===v}" aria-label="${MARK_LABEL[v]}">${MARK[v]}</button>`).join('')}</div>`;
 }
 const nextMark = m => m === '' ? 'o' : m === 'o' ? 't' : m === 't' ? 'x' : '';
 
@@ -1627,7 +1632,7 @@ function habitYearPanel(){
   const dim = m => new Date(y, m + 1, 0).getDate();
   const tables = BASE_HABITS.map(bh => {
     const h = S.habits.find(x => x.id === bh.id) || bh;
-    const tot = { o:0, t:0, x:0 }, mo = Array(12).fill(0);
+    const tot = { o:0, t:0, x:0, r:0 }, mo = Array(12).fill(0);
     let rows = '';
     for (let d = 1; d <= 31; d++){
       let tds = '';
@@ -1640,7 +1645,7 @@ function habitYearPanel(){
       rows += `<tr><th>${d}</th>${tds}</tr>`;
     }
     return `<div class="ytab">
-      <div class="ytab-h"><b>${esc(h.name)}</b><span class="mono">○${tot.o} △${tot.t} ×${tot.x}</span></div>
+      <div class="ytab-h"><b>${esc(h.name)}</b><span class="mono">○${tot.o}${bh.id === 'b-focus' && !tot.t ? '' : ` △${tot.t}`} ×${tot.x}${bh.id === 'b-focus' ? ` 休${tot.r}` : ''}</span></div>
       <table><thead><tr><th>日</th>${[...Array(12)].map((_,m) => `<th>${m+1}月</th>`).join('')}</tr></thead>
       <tbody>${rows}</tbody>
       <tfoot><tr><th>○△</th>${mo.map(v => `<td>${v || ''}</td>`).join('')}</tr></tfoot></table>
